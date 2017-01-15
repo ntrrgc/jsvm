@@ -5,7 +5,7 @@
 #pragma once
 
 #include <stdafx.h>
-#include "JSVM.h"
+#include <jsvm/JSVM.h>
 
 namespace jsvm {
 

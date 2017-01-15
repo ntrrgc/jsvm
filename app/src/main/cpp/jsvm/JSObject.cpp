@@ -3,19 +3,18 @@
 //
 
 #include "JSObject.h"
-#include "JSVM.h"
 
 using namespace jsvm;
 
 JNIEXPORT jstring JNICALL
 Java_me_ntrrgc_jsvm_JSObject_toStringNative(JNIEnv *env, jobject instance, jlong hPriv,
-                                            jint jsHandle) {
+                                            jint handle) {
 
     JSVMPriv* priv = (JSVMPriv *) hPriv;
     duk_context* ctx = priv->ctx;
 
     // Retrieve the object
-    priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) jsHandle);
+    priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
 
     // Read as string
     jstring ret = env->NewStringUTF(duk_to_string(ctx, -1));
@@ -25,3 +24,17 @@ Java_me_ntrrgc_jsvm_JSObject_toStringNative(JNIEnv *env, jobject instance, jlong
 
     return ret;
 }
+
+JSObject
+jsvm::JSObject_createFromStackTop(JNIEnv* env, JSVM jsVM){
+    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+
+    ObjectBook::handle_t handle = priv->objectBook.storeStackTop();
+
+    JSObject jsObject = (JSObject) env->NewObject(JSObject_Class, JSObject_ctor);
+    env->SetObjectField(jsObject, JSObject_jsVM, jsVM);
+    env->SetIntField(jsObject, JSObject_handle, handle);
+
+    return jsObject;
+}
+

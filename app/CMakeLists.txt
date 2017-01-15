@@ -32,6 +32,8 @@ add_library( # Sets the name of the library.
              src/main/cpp/jsvm/JSValue.cpp
              src/main/cpp/jsvm/JSObject.h
              src/main/cpp/jsvm/JSObject.cpp
+             src/main/cpp/jsvm/utils.h
+             src/main/cpp/jsvm/utils.cpp
              src/main/cpp/native-lib.cpp
              )
 

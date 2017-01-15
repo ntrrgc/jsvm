@@ -6,7 +6,7 @@ package me.ntrrgc.jsvm;
 
 public class JSObject {
     private JSVM jsVM;
-    private int jsHandle;
+    private int handle;
     private boolean aliveHandle = true;
 
     private JSObject() {}
@@ -17,11 +17,11 @@ public class JSObject {
         }
 
         synchronized (jsVM.lock) {
-            return this.toStringNative(jsVM.hPriv, jsHandle);
+            return this.toStringNative(jsVM.hPriv, handle);
         }
     }
 
-    private native String toStringNative(long hDukContext, int jsHandle);
+    private native String toStringNative(long hDukContext, int handle);
 
     public void finalize() {
         if (aliveHandle) {

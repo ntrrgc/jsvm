@@ -1,7 +1,8 @@
 //
 // Created by ntrrgc on 1/15/17.
 //
-
+#ifndef JSVM_JSVM
+#define JSVM_JSVM
 #pragma once
 
 #include <stdafx.h>
@@ -11,7 +12,7 @@
 namespace jsvm {
 
     class _JSVM : public _jobject {};
-    typedef _JSVM *JSVM;
+    typedef _JSVM* JSVM;
 
     /**
      * This class stores and manages JSVM internals.
@@ -29,3 +30,5 @@ namespace jsvm {
     JSVMPriv * JSVM_getPriv(JNIEnv *env, JSVM jsVM);
 
 }
+
+#endif

@@ -97,7 +97,7 @@ namespace jsvm {
         }
 
     private:
-        friend class JSVM; // can only be constructed and initialized inside JSVM
+        friend class JSVMPriv; // can only be constructed and initialized inside JSVM
         typedef std::stack <ObjectBook::handle_t> FreeList;
 
         ObjectBook() : m_ctx(NULL), m_nextFree(0) { }

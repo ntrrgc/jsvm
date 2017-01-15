@@ -2,13 +2,13 @@
 // Created by ntrrgc on 1/15/17.
 //
 
-#include <jni.h>
-#include "JSVM.h"
+#include <jsvm/JSVM.h>
 #include "JSValue.h"
 
 using namespace jsvm;
 
-JSVMPriv * ::jsvm::JSVM_getPriv(JNIEnv *env, JSVM jsVM) {
+JSVMPriv *
+jsvm::JSVM_getPriv(JNIEnv *env, JSVM jsVM) {
     return (JSVMPriv *) env->GetLongField(jsVM, JSVM_hPriv);
 }
 
