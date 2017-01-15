@@ -21,14 +21,14 @@ public class JSObject {
         }
     }
 
-    private native String toStringNative(long hDukContext, int handle);
+    private native String toStringNative(long hPriv, int handle);
 
     public void finalize() {
         if (aliveHandle) {
             aliveHandle = false;
-            finalizeNative();
+            finalizeNative(jsVM.hPriv, handle);
         }
     }
 
-    private native void finalizeNative();
+    private native void finalizeNative(long hPriv, int handle);
 }

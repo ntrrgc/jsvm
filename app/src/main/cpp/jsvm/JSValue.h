@@ -16,6 +16,4 @@ namespace jsvm {
 
     JSValue JSValue_createFromStackTop(JNIEnv *env, JSVM jsVM);
 
-    duk_context *JSValue_getDukContext(JNIEnv *env, JSValue jsValue);
-
 }

@@ -21,7 +21,6 @@ namespace jsvm {
     extern jclass       JSRuntimeException_Class;
 
     extern jclass       JSValue_Class;
-    extern jfieldID     JSValue_jsVM;
     extern jfieldID     JSValue_type;
     extern jfieldID     JSValue_value;
 

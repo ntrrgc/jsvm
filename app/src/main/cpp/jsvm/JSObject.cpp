@@ -6,6 +6,21 @@
 
 using namespace jsvm;
 
+JSObject
+jsvm::JSObject_createFromStackTop(JNIEnv* env, JSVM jsVM){
+    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+
+    ObjectBook::handle_t handle = priv->objectBook.storeStackTop();
+
+    JSObject jsObject = (JSObject) env->NewObject(JSObject_Class, JSObject_ctor);
+    env->SetObjectField(jsObject, JSObject_jsVM, jsVM);
+    env->SetIntField(jsObject, JSObject_handle, handle);
+
+    return jsObject;
+}
+
+extern "C" {
+
 JNIEXPORT jstring JNICALL
 Java_me_ntrrgc_jsvm_JSObject_toStringNative(JNIEnv *env, jobject instance, jlong hPriv,
                                             jint handle) {
@@ -25,16 +40,14 @@ Java_me_ntrrgc_jsvm_JSObject_toStringNative(JNIEnv *env, jobject instance, jlong
     return ret;
 }
 
-JSObject
-jsvm::JSObject_createFromStackTop(JNIEnv* env, JSVM jsVM){
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+JNIEXPORT void JNICALL
+Java_me_ntrrgc_jsvm_JSObject_finalizeNative(JNIEnv *env, jobject instance, jlong hPriv,
+                                            jint handle) {
 
-    ObjectBook::handle_t handle = priv->objectBook.storeStackTop();
+    JSVMPriv* priv = (JSVMPriv *) hPriv;
 
-    JSObject jsObject = (JSObject) env->NewObject(JSObject_Class, JSObject_ctor);
-    env->SetObjectField(jsObject, JSObject_jsVM, jsVM);
-    env->SetIntField(jsObject, JSObject_handle, handle);
+    priv->objectBook.removeObjectWithHandle((ObjectBook::handle_t) handle);
 
-    return jsObject;
 }
 
+}

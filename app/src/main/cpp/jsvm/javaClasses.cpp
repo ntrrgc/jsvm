@@ -17,7 +17,6 @@ namespace jsvm {
     jclass      JSRuntimeException_Class = NULL;
 
     jclass      JSValue_Class = NULL;
-    jfieldID    JSValue_jsVM = NULL;
     jfieldID    JSValue_type = NULL;
     jfieldID    JSValue_value = NULL;
 
@@ -61,7 +60,6 @@ void ::jsvm::initClassesAndFields(JNIEnv *env) {
     JSRuntimeException_Class = findClass(env, "me/ntrrgc/jsvm/JSRuntimeException");
 
     JSValue_Class = findClass(env, "me/ntrrgc/jsvm/JSValue");
-    JSValue_jsVM = env->GetFieldID(JSValue_Class, "jsVM", "L" "me/ntrrgc/jsvm/JSVM;");
     JSValue_type = env->GetFieldID(JSValue_Class, "type", "I");
     JSValue_value = env->GetFieldID(JSValue_Class, "value", "L" "java/lang/Object;");
 

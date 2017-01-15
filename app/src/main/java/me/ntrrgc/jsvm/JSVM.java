@@ -52,7 +52,7 @@ public class JSVM {
         }
     }
 
-    public native JSValue evaluateScriptNative(String code);
+    private native JSValue evaluateScriptNative(String code);
 
     public native void finalize();
 }

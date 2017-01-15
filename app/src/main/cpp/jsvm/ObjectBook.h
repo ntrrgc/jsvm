@@ -34,8 +34,7 @@ namespace jsvm {
 
             // Get the object book
             duk_push_global_stash(m_ctx);
-            duk_push_int(m_ctx, GLOBAL_STASH_INDEX_OBJECT_BOOK);
-            duk_get_prop(m_ctx, -2);
+            duk_get_prop_index(m_ctx, -1, GLOBAL_STASH_INDEX_OBJECT_BOOK);
 
             // Write the object in the book:
             duk_dup(m_ctx, -3);
@@ -60,8 +59,7 @@ namespace jsvm {
 
             // Get the object book
             duk_push_global_stash(m_ctx);
-            duk_push_int(m_ctx, GLOBAL_STASH_INDEX_OBJECT_BOOK);
-            duk_get_prop(m_ctx, -2);
+            duk_get_prop_index(m_ctx, -1, GLOBAL_STASH_INDEX_OBJECT_BOOK);
 
             // Overwrite the handle entry with null in the book:
             duk_push_null(m_ctx);
@@ -83,8 +81,7 @@ namespace jsvm {
 
             // Get the object book
             duk_push_global_stash(m_ctx);
-            duk_push_int(m_ctx, GLOBAL_STASH_INDEX_OBJECT_BOOK);
-            duk_get_prop(m_ctx, -2);
+            duk_get_prop_index(m_ctx, -1, GLOBAL_STASH_INDEX_OBJECT_BOOK);
 
             // Fetch the handle entry with the provided handle:
             duk_get_prop_index(m_ctx, -1, handle);
@@ -105,6 +102,12 @@ namespace jsvm {
             assert(ctx);
             assert(this->m_ctx == NULL);
             this->m_ctx = ctx;
+
+            // Initialize the book object
+            duk_push_global_stash(m_ctx);
+            duk_push_object(m_ctx);
+            duk_put_prop_index(m_ctx, -2, GLOBAL_STASH_INDEX_OBJECT_BOOK);
+            duk_pop(m_ctx);
         }
 
         duk_context *m_ctx;

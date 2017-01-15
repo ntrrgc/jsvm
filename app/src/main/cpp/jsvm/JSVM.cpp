@@ -81,6 +81,3 @@ JSVMPriv::~JSVMPriv() {
     duk_destroy_heap(ctx);
     ctx = NULL;
 }
-
-
-

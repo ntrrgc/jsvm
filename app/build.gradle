@@ -38,4 +38,5 @@ dependencies {
     testCompile 'junit:junit:4.12'
     androidTestCompile 'commons-io:commons-io:2.5'
     compile 'commons-io:commons-io:2.5'
+    compile 'org.jetbrains:annotations-java5:15.0'
 }

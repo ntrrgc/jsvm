@@ -15,12 +15,6 @@ using namespace jsvm;
 #define JSVALUE_TYPE_STRING 5
 #define JSVALUE_TYPE_OBJECT 6
 
-duk_context *
-jsvm::JSValue_getDukContext(JNIEnv *env, JSValue jsValue) {
-    JSVM jsVM = (JSVM) env->GetObjectField(jsValue, JSValue_jsVM);
-    return JSVM_getPriv(env, jsVM)->ctx;
-}
-
 JSValue
 jsvm::JSValue_createFromStackTop(JNIEnv *env, JSVM jsVM) {
     JSVMPriv *priv = JSVM_getPriv(env, jsVM);
@@ -60,30 +54,8 @@ jsvm::JSValue_createFromStackTop(JNIEnv *env, JSVM jsVM) {
     }
 
     JSValue jsValue = (JSValue) env->AllocObject(JSValue_Class);
-    env->SetObjectField(jsValue, JSValue_jsVM, jsVM);
     env->SetIntField(jsValue, JSValue_type, valueType);
     env->SetObjectField(jsValue, JSValue_value, boxedValue);
 
     return jsValue;
 }
-
-extern "C" {
-
-JNIEXPORT jstring JNICALL
-Java_me_ntrrgc_jsvm_JSValue_asString(JNIEnv *env, jobject instance) {
-    JSValue jsValue = (JSValue) instance;
-
-    duk_context *ctx = JSValue_getDukContext(env, jsValue);
-
-    duk_push_global_stash(ctx);
-    duk_push_pointer(ctx, jsValue);
-    duk_get_prop(ctx, -2);
-
-    jstring returnValue = env->NewStringUTF(duk_get_string(ctx, -1));
-
-    duk_pop_2(ctx); // pop value and stash
-
-    return returnValue;
-}
-
-};
