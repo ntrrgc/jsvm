@@ -158,4 +158,19 @@ final public class JSValue {
     public static JSValue anObject(JSObject value) {
         return new JSValue(TYPE_OBJECT, value);
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof JSValue) {
+            JSValue other = (JSValue) obj;
+            return other.type == type && other.value == value;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return this.type ^ this.value.hashCode();
+    }
 }
