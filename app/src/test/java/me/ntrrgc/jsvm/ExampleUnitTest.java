@@ -1,4 +1,4 @@
-package ntrrgc.me.jsvm;
+package me.ntrrgc.jsvm;
 
 import org.junit.Test;
 

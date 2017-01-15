@@ -21,8 +21,16 @@ add_library( # Sets the name of the library.
              src/main/cpp/duktape/duktape.c
              src/main/cpp/duktape/duktape.h
              src/main/cpp/duktape/duk_config.h
+             src/main/cpp/jsvm/javaClasses.h
+             src/main/cpp/jsvm/javaClasses.cpp
+             src/main/cpp/jsvm/JSVM.h
+             src/main/cpp/jsvm/JSVM.cpp
+             src/main/cpp/jsvm/JSValue.h
+             src/main/cpp/jsvm/JSValue.cpp
              src/main/cpp/native-lib.cpp
              )
+
+ include_directories(src/main/cpp)
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because system libraries are included in the search path by

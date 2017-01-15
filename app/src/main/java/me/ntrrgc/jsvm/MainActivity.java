@@ -1,4 +1,4 @@
-package ntrrgc.me.jsvm;
+package me.ntrrgc.jsvm;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -21,9 +21,10 @@ public class MainActivity extends AppCompatActivity {
 
         // Example of a call to a native method
         TextView tv = (TextView) findViewById(R.id.sample_text);
-        JSValue v = jsvm.evaluateScript("'Hello from' + ' JS'");
-        Log.i("OKA", String.valueOf(v.jsVM == jsvm));
-        tv.setText(v.asString());
+        tv.setText(JSVM.stringFromJNI());
+//        JSValue v = jsvm.evaluateScript("'Hello from' + ' JS'");
+//        Log.i("OKA", String.valueOf(v.jsVM == jsvm));
+//        tv.setText(v.asString());
 
 
         String bluebird = null;

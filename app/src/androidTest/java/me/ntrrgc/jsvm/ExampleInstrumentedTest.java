@@ -1,12 +1,10 @@
-package ntrrgc.me.jsvm;
+package me.ntrrgc.jsvm;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
-import android.support.test.espresso.core.deps.guava.base.Charsets;
 import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
 
-import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 

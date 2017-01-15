@@ -1,6 +1,4 @@
-package ntrrgc.me.jsvm;
-
-import java.util.List;
+package me.ntrrgc.jsvm;
 
 /**
  * Created by ntrrgc on 1/14/17.
