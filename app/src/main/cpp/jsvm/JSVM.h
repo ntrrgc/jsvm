@@ -5,12 +5,27 @@
 #pragma once
 
 #include <stdafx.h>
+#include <stack>
+#include "ObjectBook.h"
 
 namespace jsvm {
 
     class _JSVM : public _jobject {};
     typedef _JSVM *JSVM;
 
-    duk_context *JSVM_getDukContext(JNIEnv *env, JSVM jsVM);
+    /**
+     * This class stores and manages JSVM internals.
+     *
+     * A pointer to this class is stored in JSVM::hPriv.
+     */
+    struct JSVMPriv {
+        JSVMPriv();
+        ~JSVMPriv();
+
+        duk_context *ctx;
+        ObjectBook objectBook;
+    };
+
+    JSVMPriv * JSVM_getPriv(JNIEnv *env, JSVM jsVM);
 
 }

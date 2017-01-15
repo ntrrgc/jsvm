@@ -9,7 +9,7 @@ using namespace jsvm;
 duk_context *
 jsvm::JSValue_getDukContext(JNIEnv *env, JSValue jsValue) {
     JSVM jsVM = (JSVM) env->GetObjectField(jsValue, JSValue_jsVM);
-    return JSVM_getDukContext(env, jsVM);
+    return JSVM_getPriv(env, jsVM)->ctx;
 }
 
 JSValue
@@ -18,7 +18,7 @@ jsvm::JSValue_createFromStackTop(JNIEnv *env, JSVM jsVM) {
     JSValue jsValue = (JSValue) env->AllocObject(JSValue_Class);
     env->SetObjectField(jsValue, JSValue_jsVM, jsVM);
 
-    duk_context *ctx = JSVM_getDukContext(env, jsVM);
+    duk_context *ctx = JSVM_getPriv(env, jsVM)->ctx;
 
     // Use the JSValue pointer as index in the global stash so that
     // the value is not GCed in JSland while JSValue is alive in Javaland.

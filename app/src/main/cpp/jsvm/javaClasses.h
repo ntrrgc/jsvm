@@ -10,7 +10,7 @@
 namespace jsvm {
 
     extern jclass JSVM_Class;
-    extern jfieldID JSVM_hDukContext;
+    extern jfieldID JSVM_hPriv;
 
     extern jclass JSRuntimeException_Class;
 

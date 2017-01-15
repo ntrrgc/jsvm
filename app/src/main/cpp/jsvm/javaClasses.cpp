@@ -6,7 +6,7 @@
 
 namespace jsvm {
     jclass JSVM_Class = NULL;
-    jfieldID JSVM_hDukContext = NULL;
+    jfieldID JSVM_hPriv = NULL;
 
     jclass JSRuntimeException_Class = NULL;
 
@@ -37,7 +37,7 @@ removeClass(JNIEnv *env, jclass *classRef) {
 
 void ::jsvm::initClassesAndFields(JNIEnv *env) {
     JSVM_Class = findClass(env, "me/ntrrgc/jsvm/JSVM");
-    JSVM_hDukContext = env->GetFieldID(JSVM_Class, "hDukContext", "J");
+    JSVM_hPriv = env->GetFieldID(JSVM_Class, "hDukContext", "J");
 
     JSRuntimeException_Class = findClass(env, "me/ntrrgc/jsvm/JSRuntimeException");
 

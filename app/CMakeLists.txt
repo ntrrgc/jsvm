@@ -21,12 +21,17 @@ add_library( # Sets the name of the library.
              src/main/cpp/duktape/duktape.c
              src/main/cpp/duktape/duktape.h
              src/main/cpp/duktape/duk_config.h
+             src/main/cpp/stdafx.h
              src/main/cpp/jsvm/javaClasses.h
              src/main/cpp/jsvm/javaClasses.cpp
+             src/main/cpp/jsvm/stashIndices.h
+             src/main/cpp/jsvm/ObjectBook.h
              src/main/cpp/jsvm/JSVM.h
              src/main/cpp/jsvm/JSVM.cpp
              src/main/cpp/jsvm/JSValue.h
              src/main/cpp/jsvm/JSValue.cpp
+             src/main/cpp/jsvm/JSObject.h
+             src/main/cpp/jsvm/JSObject.cpp
              src/main/cpp/native-lib.cpp
              )
 

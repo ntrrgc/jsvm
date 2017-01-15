@@ -8,13 +8,31 @@ public class JSVM {
     // Used to load the 'native-lib' library on application startup.
     static {
         System.loadLibrary("native-lib");
-        initialize();
+        initializeLibrary();
     }
 
-    public static native void initialize();
-    public static native void destroy();
+    /**
+     * Initializes the JNI-side.
+     */
+    public static native void initializeLibrary();
 
-    private long hDukContext;
+    /**
+     * Called to tear down the library.
+     *
+     * TODO This should not be public and only be called if the library is unloaded.
+     */
+    public static native void destroyLibrary();
+
+    /**
+     * Native (duk_context *)
+     */
+    /* package */ long hPriv;
+
+    /**
+     * Synchronization monitor used so that two threads never
+     * use the same Duktape heap simultaneously.
+     */
+    /* package */ final Object lock = new Object();
 
     /**
      * A native method that is implemented by the 'native-lib' native library,
@@ -28,7 +46,13 @@ public class JSVM {
         nativeInit();
     }
 
-    public native JSValue evaluateScript(String code);
+    public JSValue evaluateScript(String code) {
+        synchronized (this.lock) {
+            return evaluateScriptNative(code);
+        }
+    }
+
+    public native JSValue evaluateScriptNative(String code);
 
     public native void finalize();
 }

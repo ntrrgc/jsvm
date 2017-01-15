@@ -8,47 +8,47 @@
 
 using namespace jsvm;
 
-duk_context * ::jsvm::JSVM_getDukContext(JNIEnv *env, JSVM jsVM) {
-    return (duk_context *) env->GetLongField(jsVM, JSVM_hDukContext);
+JSVMPriv * ::jsvm::JSVM_getPriv(JNIEnv *env, JSVM jsVM) {
+    return (JSVMPriv *) env->GetLongField(jsVM, JSVM_hPriv);
 }
 
 extern "C" {
 
 JNIEXPORT void JNICALL
-Java_me_ntrrgc_jsvm_JSVM_nativeInit(JNIEnv *env, jobject instance) {
-    duk_context *ctx = duk_create_heap(
-            NULL, NULL, NULL, NULL, NULL
-    );
-    if (ctx == NULL) {
-        env->ThrowNew(JSRuntimeException_Class, "Failed to create JS heap");
-        return;
-    }
-
-    duk_push_global_object(ctx);
-    duk_push_string(ctx, "global");
-    duk_push_global_object(ctx);
-    duk_put_prop(ctx, -3);
-
-    env->SetLongField(instance, JSVM_hDukContext, (jlong) ctx);
-
-}
-
-JNIEXPORT void JNICALL
-Java_me_ntrrgc_jsvm_JSVM_initialize(JNIEnv *env, jclass type) {
+Java_me_ntrrgc_jsvm_JSVM_initializeLibrary(JNIEnv *env, jclass type) {
     initClassesAndFields(env);
 }
 
 JNIEXPORT void JNICALL
-Java_me_ntrrgc_jsvm_JSVM_destroy(JNIEnv *env, jclass type) {
+Java_me_ntrrgc_jsvm_JSVM_destroyLibrary(JNIEnv *env, jclass type) {
     tearDownClassesAndFields(env);
 }
 
+JNIEXPORT void JNICALL
+Java_me_ntrrgc_jsvm_JSVM_nativeInit(JNIEnv *env, jobject instance) {
+    JSVMPriv *priv = new JSVMPriv();
+
+    if (priv->ctx != NULL) {
+        env->SetLongField(instance, JSVM_hPriv, (jlong) priv);
+    } else {
+        env->ThrowNew(JSRuntimeException_Class, "Failed to create JS heap");
+    }
+}
+
+JNIEXPORT void JNICALL
+Java_me_ntrrgc_jsvm_JSVM_finalize(JNIEnv *env, jobject instance) {
+    JSVM jsVM = (JSVM) instance;
+
+    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    delete priv;
+}
+
 JNIEXPORT jobject JNICALL
-Java_me_ntrrgc_jsvm_JSVM_evaluateScript(JNIEnv *env, jobject instance, jstring code_) {
+Java_me_ntrrgc_jsvm_JSVM_evaluateScriptNative(JNIEnv *env, jobject instance, jstring code_) {
     JSVM jsVM = (JSVM) instance;
     const char *code = env->GetStringUTFChars(code_, 0);
 
-    duk_context *ctx = JSVM_getDukContext(env, jsVM);
+    duk_context *ctx = JSVM_getPriv(env, jsVM)->ctx;
 
     duk_eval_string(ctx, code);
     jobject returnValue = JSValue_createFromStackTop(env, jsVM);
@@ -59,3 +59,28 @@ Java_me_ntrrgc_jsvm_JSVM_evaluateScript(JNIEnv *env, jobject instance, jstring c
 }
 
 }
+
+JSVMPriv::JSVMPriv() {
+    ctx = duk_create_heap(
+            NULL, NULL, NULL, NULL, NULL
+    );
+    if (ctx == NULL) {
+        return;
+    }
+
+    // Make global object accessible with "global".
+    duk_push_global_object(ctx);
+    duk_push_string(ctx, "global");
+    duk_push_global_object(ctx);
+    duk_put_prop(ctx, -3);
+
+    this->objectBook.lateInit(ctx);
+}
+
+JSVMPriv::~JSVMPriv() {
+    duk_destroy_heap(ctx);
+    ctx = NULL;
+}
+
+
+
