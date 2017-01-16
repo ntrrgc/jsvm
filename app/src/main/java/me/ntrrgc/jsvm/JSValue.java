@@ -173,4 +173,23 @@ final public class JSValue {
     public int hashCode() {
         return this.type ^ this.value.hashCode();
     }
+
+    @Override
+    public String toString() {
+        switch (type) {
+            case TYPE_UNDEFINED:
+                return "undefined";
+            case TYPE_NULL:
+                return "null";
+            case TYPE_BOOLEAN:
+            case TYPE_NUMBER:
+            case TYPE_STRING:
+            case TYPE_OBJECT:
+                return asString();
+            case TYPE_UNSUPPORTED:
+                return "<unsupported type>";
+            default:
+                throw new RuntimeException("Unknown type");
+        }
+    }
 }
