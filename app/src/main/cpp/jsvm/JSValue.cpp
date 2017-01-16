@@ -59,3 +59,54 @@ jsvm::JSValue_createFromStackTop(JNIEnv *env, JSVM jsVM) {
 
     return jsValue;
 }
+
+may_throw
+jsvm::JSValue_push(JNIEnv *env, JSValue jsValue, duk_context *ctx) {
+    int valueType = env->GetIntField(jsValue, JSValue_type);
+    jobject boxedValue = env->GetObjectField(jsValue, JSValue_value);
+
+    switch (valueType) {
+        case JSVALUE_TYPE_UNDEFINED:
+            duk_push_undefined(ctx);
+            break;
+        case JSVALUE_TYPE_NULL:
+            duk_push_null(ctx);
+            break;
+        case JSVALUE_TYPE_BOOLEAN:
+            duk_push_boolean(ctx, env->GetBooleanField(boxedValue, Boolean_value));
+            break;
+        case JSVALUE_TYPE_NUMBER:
+            duk_push_number(ctx, env->GetDoubleField(boxedValue, Double_value));
+            break;
+        case JSVALUE_TYPE_STRING: {
+            const char *value = env->GetStringUTFChars((jstring) boxedValue, 0);
+            duk_push_string(ctx, value);
+            env->ReleaseStringUTFChars((jstring) boxedValue, value);
+            break; }
+        case JSVALUE_TYPE_OBJECT: {
+            JSObject jsObject = (JSObject) boxedValue;
+            JSVM jsObjectVM = (JSVM) env->GetObjectField(jsObject, JSObject_jsVM);
+            duk_context* objectContext = JSVM_getPriv(env, jsObjectVM)->ctx;
+
+            if (objectContext != ctx) {
+                jthrowable err = (jthrowable) env->NewObject(
+                                        AttemptedToUseObjectFromOtherVM_Class,
+                                        AttemptedToUseObjectFromOtherVM_ctor,
+                                        jsObject, jsObjectVM);
+                env->Throw(err);
+                return THREW_EXCEPTION;
+            }
+
+            JSObject_push(env, jsObject);
+            break; }
+        case JSVALUE_TYPE_UNSUPPORTED:
+            env->ThrowNew(IllegalArgumentException_Class,
+                          "Attempted to use JSValue of unsupported type");
+            return THREW_EXCEPTION;
+        default:
+            env->ThrowNew(JSRuntimeException_Class, "Unknown JSValue type");
+            return THREW_EXCEPTION;
+    }
+
+    return OK;
+}

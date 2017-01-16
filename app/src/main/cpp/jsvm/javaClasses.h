@@ -11,14 +11,21 @@ namespace jsvm {
 
     extern jclass       Boolean_Class;
     extern jmethodID    Boolean_ctor;
+    extern jfieldID     Boolean_value;
 
     extern jclass       Double_Class;
     extern jmethodID    Double_ctor;
+    extern jfieldID     Double_value;
 
     extern jclass       JSVM_Class;
     extern jfieldID     JSVM_hPriv;
 
     extern jclass       JSRuntimeException_Class;
+
+    extern jclass       IllegalArgumentException_Class;
+
+    extern jclass       AttemptedToUseObjectFromOtherVM_Class;
+    extern jmethodID    AttemptedToUseObjectFromOtherVM_ctor;
 
     extern jclass       JSValue_Class;
     extern jfieldID     JSValue_type;

@@ -15,4 +15,6 @@ namespace jsvm {
 
     JSObject JSObject_createFromStackTop(JNIEnv *env, JSVM jsVM);
 
+    void JSObject_push(JNIEnv* env, JSObject jsObject);
+
 }

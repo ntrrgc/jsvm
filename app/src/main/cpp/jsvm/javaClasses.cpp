@@ -7,14 +7,21 @@
 namespace jsvm {
     jclass      Boolean_Class = NULL;
     jmethodID   Boolean_ctor = NULL;
+    jfieldID    Boolean_value = NULL;
 
     jclass      Double_Class = NULL;
     jmethodID   Double_ctor = NULL;
+    jfieldID    Double_value = NULL;
 
     jclass      JSVM_Class = NULL;
     jfieldID    JSVM_hPriv = NULL;
 
     jclass      JSRuntimeException_Class = NULL;
+
+    jclass      IllegalArgumentException_Class = NULL;
+
+    jclass      AttemptedToUseObjectFromOtherVM_Class = NULL;
+    jmethodID   AttemptedToUseObjectFromOtherVM_ctor = NULL;
 
     jclass      JSValue_Class = NULL;
     jfieldID    JSValue_type = NULL;
@@ -50,14 +57,24 @@ removeClass(JNIEnv *env, jclass *classRef) {
 void ::jsvm::initClassesAndFields(JNIEnv *env) {
     Boolean_Class = findClass(env, "java/lang/Boolean");
     Boolean_ctor = env->GetMethodID(Boolean_Class, "<init>", "(Z)V");
+    Boolean_value = env->GetFieldID(Boolean_Class, "value", "Z");
 
     Double_Class = findClass(env, "java/lang/Double");
     Double_ctor = env->GetMethodID(Double_Class, "<init>", "(D)V");
+    Double_value = env->GetFieldID(Double_Class, "value", "D");
 
     JSVM_Class = findClass(env, "me/ntrrgc/jsvm/JSVM");
     JSVM_hPriv = env->GetFieldID(JSVM_Class, "hPriv", "J");
 
     JSRuntimeException_Class = findClass(env, "me/ntrrgc/jsvm/JSRuntimeException");
+
+    IllegalArgumentException_Class = findClass(env, "java/lang/IllegalArgumentException");
+
+    AttemptedToUseObjectFromOtherVM_Class = findClass(env, "me/ntrrgc/jsvm/AttemptedToUseObjectFromOtherVM");
+    AttemptedToUseObjectFromOtherVM_ctor =
+            env->GetMethodID(AttemptedToUseObjectFromOtherVM_Class,
+                             "<init>",
+                             "(Lme/ntrrgc/jsvm/JSObject;Lme/ntrrgc/jsvm/JSVM;)V");
 
     JSValue_Class = findClass(env, "me/ntrrgc/jsvm/JSValue");
     JSValue_type = env->GetFieldID(JSValue_Class, "type", "I");
