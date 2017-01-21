@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * Throwing this exception from Java method that was
  * called from JSVM will cause the provided JSValue
- * to be throw to the JS caller.
+ * to be thrown to the JS caller.
  *
  * Created by ntrrgc on 1/21/17.
  */
@@ -21,7 +21,7 @@ public final class JSError extends RuntimeException {
     // `throw undefined;` are valid JavaScript.
     private final JSValue jsError;
 
-    public JSError(JSValue jsError) {
+    public JSError(@NotNull JSValue jsError) {
         super(extractErrorMessage(jsError));
         this.jsError = jsError;
     }
@@ -31,7 +31,7 @@ public final class JSError extends RuntimeException {
     }
 
     @NotNull
-    private static String extractErrorMessage(JSValue jsError) {
+    private static String extractErrorMessage(@NotNull JSValue jsError) {
         JSObject jsErrorObject = jsError.asObject();
         if (jsErrorObject != null) {
             return jsErrorObject.get("message").toString();
