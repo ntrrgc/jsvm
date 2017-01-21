@@ -73,7 +73,7 @@ public class StringTests {
 
     @Test
     public void testCatGrinningAsObjectKeyFromJS() throws Exception {
-        JSObject obj = jsvm.evaluateScript("({'\uD83D\uDE3A': 'value'})").asObject();
+        JSObject obj = jsvm.evaluateScript("({'\\uD83D\\uDE3A': 'value'})").asObject();
         assertNotNull(obj);
         assertEquals("value", obj.get("\uD83D\uDE3A").asString());
     }
@@ -82,12 +82,12 @@ public class StringTests {
     public void testCatGrinningAsObjectKeyFromJava() throws Exception {
         tester.set("\uD83D\uDE3A", JSValue.aString("value"));
         assertEquals("value", tester.get("\uD83D\uDE3A").asString());
-        assertEquals("value", jsvm.evaluateScript("tester['\uD83D\uDE3A']").asString());
+        assertEquals("value", jsvm.evaluateScript("tester['\\uD83D\\uDE3A']").asString());
     }
 
     @Test
     public void testEmbeddedNullsInObjectKeyFromJS() throws Exception {
-        JSObject obj = jsvm.evaluateScript("({'a\u0000b': 'value'})").asObject();
+        JSObject obj = jsvm.evaluateScript("({'a\\u0000b': 'value'})").asObject();
         assertNotNull(obj);
         assertEquals("value", obj.get("a\u0000b").asString());
     }
@@ -96,7 +96,7 @@ public class StringTests {
     public void testEmbeddedNullsInObjectKeyFromJava() throws Exception {
         tester.set("a\u0000b", JSValue.aString("value"));
         assertEquals("value", tester.get("a\u0000b").asString());
-        assertEquals("value", jsvm.evaluateScript("tester['a\u0000b']").asString());
+        assertEquals("value", jsvm.evaluateScript("tester['a\\u0000b']").asString());
     }
 
     @Test
