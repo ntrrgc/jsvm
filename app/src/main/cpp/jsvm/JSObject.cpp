@@ -64,9 +64,7 @@ Java_me_ntrrgc_jsvm_JSObject_finalizeNative(JNIEnv *env, jobject instance, jlong
 
 JNIEXPORT jobject JNICALL
 Java_me_ntrrgc_jsvm_JSObject_getByKeyNative(JNIEnv *env, jobject instance, jobject jsVM_, jint handle,
-                                            jstring key_) {
-    const char *key = env->GetStringUTFChars(key_, 0);
-
+                                            jstring key) {
     JSVM jsVM = (JSVM) jsVM_;
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
     duk_context* ctx = priv->ctx;
@@ -75,7 +73,8 @@ Java_me_ntrrgc_jsvm_JSObject_getByKeyNative(JNIEnv *env, jobject instance, jobje
     priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
 
     // Fetch property
-    duk_get_prop_string(ctx, -1, key);
+    String_pushJString(env, key, ctx);
+    duk_get_prop(ctx, -2);
 
     // Wrap in JSValue
     JSValue ret;
@@ -89,7 +88,6 @@ Java_me_ntrrgc_jsvm_JSObject_getByKeyNative(JNIEnv *env, jobject instance, jobje
     // Restore stack
     duk_pop_2(ctx);
 
-    env->ReleaseStringUTFChars(key_, key);
     return ret;
 }
 
@@ -126,9 +124,7 @@ Java_me_ntrrgc_jsvm_JSObject_getByIndexNative(JNIEnv *env, jobject instance, job
 
 JNIEXPORT void JNICALL
 Java_me_ntrrgc_jsvm_JSObject_setByKeyNative(JNIEnv *env, jobject instance, jobject jsVM_,
-                                            jint handle, jstring key_, jobject value) {
-    const char *key = env->GetStringUTFChars(key_, 0);
-
+                                            jint handle, jstring key, jobject value) {
     JSVM jsVM = (JSVM) jsVM_;
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
     duk_context* ctx = priv->ctx;
@@ -137,16 +133,15 @@ Java_me_ntrrgc_jsvm_JSObject_setByKeyNative(JNIEnv *env, jobject instance, jobje
     priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
 
     // Set property
+    String_pushJString(env, key, ctx);
     if (THREW_EXCEPTION == JSValue_push(env, (JSValue) value, ctx)) {
         goto release;
     }
-    duk_put_prop_string(ctx, -2, key);
+    duk_put_prop(ctx, -3);
 
 release:
     // Restore stack
     duk_pop(ctx); // objectBook
-
-    env->ReleaseStringUTFChars(key_, key);
 }
 
 JNIEXPORT void JNICALL
@@ -173,9 +168,7 @@ release:
 
 JNIEXPORT jboolean JNICALL
 Java_me_ntrrgc_jsvm_JSObject_containsByKeyNative(JNIEnv *env, jobject instance, jobject jsVM_,
-                                                 jint handle, jstring key_) {
-    const char *key = env->GetStringUTFChars(key_, 0);
-
+                                                 jint handle, jstring key) {
     JSVM jsVM = (JSVM) jsVM_;
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
     duk_context* ctx = priv->ctx;
@@ -184,12 +177,12 @@ Java_me_ntrrgc_jsvm_JSObject_containsByKeyNative(JNIEnv *env, jobject instance, 
     priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
 
     // Search property
-    jboolean ret = (jboolean) duk_has_prop_string(ctx, -1, key);
+    String_pushJString(env, key, ctx);
+    jboolean ret = (jboolean) duk_has_prop(ctx, -2);
 
     // Restore stack
     duk_pop(ctx); // objectBook
 
-    env->ReleaseStringUTFChars(key_, key);
     return ret;
 }
 
