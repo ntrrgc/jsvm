@@ -11,6 +11,7 @@ import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -27,7 +28,10 @@ public class StringTests {
     @Before
     public void setUp() {
         jsvm = new JSVM();
-        tester = jsvm.evaluateScript("({string: '', get length() { return this.string.length; }})").asObject();
+        tester = jsvm.evaluateScript("var tester = {" +
+                "string: '', " +
+                "get length() { return this.string.length; }" +
+                "}; tester").asObject();
     }
 
     @After
@@ -65,6 +69,20 @@ public class StringTests {
     @Test
     public void testCatGrinningInJS() throws Exception {
         assertEquals(2, jsvm.evaluateScript("('\\uD83D\\uDE3A').length").asInt().intValue());
+    }
+
+    @Test
+    public void testCatGrinningAsObjectKeyFromJS() throws Exception {
+        JSObject obj = jsvm.evaluateScript("({'\uD83D\uDE3A': 'value'})").asObject();
+        assertNotNull(obj);
+        assertEquals("value", obj.get("\uD83D\uDE3A").asString());
+    }
+
+    @Test
+    public void testCatGrinningAsObjectKeyFromJava() throws Exception {
+        tester.set("\uD83D\uDE3A", JSValue.aString("value"));
+        assertEquals("value", tester.get("\uD83D\uDE3A").asString());
+        assertEquals("value", jsvm.evaluateScript("tester['\uD83D\uDE3A']").asString());
     }
 
     @Test
