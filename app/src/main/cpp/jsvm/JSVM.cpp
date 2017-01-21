@@ -49,13 +49,19 @@ Java_me_ntrrgc_jsvm_JSVM_evaluateScriptNative(JNIEnv *env, jobject instance, jst
     const char *code = env->GetStringUTFChars(code_, 0);
 
     duk_context *ctx = JSVM_getPriv(env, jsVM)->ctx;
+    jobject ret;
 
     duk_eval_string(ctx, code);
-    jobject returnValue = JSValue_createFromStackTop(env, jsVM);
+    Result<JSValue> valueResult = JSValue_createFromStackTop(env, jsVM);
+    if (THREW_EXCEPTION == valueResult.status()) {
+        ret = NULL;
+    } else {
+        ret = valueResult.get();
+    }
     duk_pop(ctx);
 
     env->ReleaseStringUTFChars(code_, code);
-    return returnValue;
+    return ret;
 }
 
 }

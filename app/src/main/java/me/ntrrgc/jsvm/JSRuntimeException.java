@@ -5,4 +5,7 @@ package me.ntrrgc.jsvm;
  */
 
 public class JSRuntimeException extends RuntimeException {
+    public JSRuntimeException(String message) {
+        super(message);
+    }
 }

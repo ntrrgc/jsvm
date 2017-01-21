@@ -78,7 +78,13 @@ Java_me_ntrrgc_jsvm_JSObject_getByKeyNative(JNIEnv *env, jobject instance, jobje
     duk_get_prop_string(ctx, -1, key);
 
     // Wrap in JSValue
-    JSValue ret = JSValue_createFromStackTop(env, jsVM);
+    JSValue ret;
+    Result<JSValue> valueResult = JSValue_createFromStackTop(env, jsVM);
+    if (THREW_EXCEPTION == valueResult.status()) {
+        ret = NULL;
+    } else {
+        ret = valueResult.get();
+    }
 
     // Restore stack
     duk_pop_2(ctx);
@@ -103,7 +109,13 @@ Java_me_ntrrgc_jsvm_JSObject_getByIndexNative(JNIEnv *env, jobject instance, job
     duk_get_prop_index(ctx, -1, (duk_uarridx_t) index);
 
     // Wrap in JSValue
-    JSValue ret = JSValue_createFromStackTop(env, jsVM);
+    JSValue ret;
+    Result<JSValue> valueResult = JSValue_createFromStackTop(env, jsVM);
+    if (THREW_EXCEPTION == valueResult.status()) {
+        ret = NULL;
+    } else {
+        ret = valueResult.get();
+    }
 
     // Restore stack
     duk_pop_2(ctx);

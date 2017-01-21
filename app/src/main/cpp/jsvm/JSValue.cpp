@@ -15,7 +15,7 @@ using namespace jsvm;
 #define JSVALUE_TYPE_STRING 5
 #define JSVALUE_TYPE_OBJECT 6
 
-JSValue
+Result<JSValue>
 jsvm::JSValue_createFromStackTop(JNIEnv *env, JSVM jsVM) {
     JSVMPriv *priv = JSVM_getPriv(env, jsVM);
     duk_context *ctx = priv->ctx;
@@ -41,10 +41,14 @@ jsvm::JSValue_createFromStackTop(JNIEnv *env, JSVM jsVM) {
             boxedValue = env->NewObject(Double_Class, Double_ctor,
                                         duk_get_number(ctx, -1));
             break;
-        case DUK_TYPE_STRING:
+        case DUK_TYPE_STRING: {
             valueType = JSVALUE_TYPE_STRING;
-            boxedValue = String_createFromStackTop(env, ctx);
-            break;
+            Result<jstring> resultString = String_createFromStackTop(env, ctx);
+            if (resultString.status() == THREW_EXCEPTION) {
+                return Result<JSValue>::createThrew();
+            }
+            boxedValue = resultString.get();
+            break; }
         case DUK_TYPE_OBJECT:
             valueType = JSVALUE_TYPE_OBJECT;
             boxedValue = JSObject_createFromStackTop(env, jsVM);
@@ -57,7 +61,7 @@ jsvm::JSValue_createFromStackTop(JNIEnv *env, JSVM jsVM) {
     env->SetIntField(jsValue, JSValue_type, valueType);
     env->SetObjectField(jsValue, JSValue_value, boxedValue);
 
-    return jsValue;
+    return Result<JSValue>::createOK(jsValue);
 }
 
 may_throw

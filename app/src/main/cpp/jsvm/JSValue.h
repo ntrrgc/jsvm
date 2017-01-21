@@ -14,7 +14,7 @@ namespace jsvm {
 
     typedef _JSValue *JSValue;
 
-    JSValue JSValue_createFromStackTop(JNIEnv *env, JSVM jsVM);
+    Result<JSValue> JSValue_createFromStackTop(JNIEnv *env, JSVM jsVM);
 
     may_throw JSValue_push(JNIEnv *env, JSValue jsValue, duk_context *ctx);
 

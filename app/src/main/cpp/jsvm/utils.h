@@ -5,5 +5,5 @@
 #include <stdafx.h>
 
 namespace jsvm {
-    jstring String_createFromStackTop(JNIEnv *env, duk_context *ctx);
+    Result <jstring> String_createFromStackTop(JNIEnv *env, duk_context *ctx);
 }
