@@ -82,11 +82,9 @@ jsvm::JSValue_push(JNIEnv *env, JSValue jsValue, duk_context *ctx) {
         case JSVALUE_TYPE_NUMBER:
             duk_push_number(ctx, env->GetDoubleField(boxedValue, Double_value));
             break;
-        case JSVALUE_TYPE_STRING: {
-            const char *value = env->GetStringUTFChars((jstring) boxedValue, 0);
-            duk_push_string(ctx, value);
-            env->ReleaseStringUTFChars((jstring) boxedValue, value);
-            break; }
+        case JSVALUE_TYPE_STRING:
+            String_pushJString(env, (jstring) boxedValue, ctx);
+            break;
         case JSVALUE_TYPE_OBJECT: {
             JSObject jsObject = (JSObject) boxedValue;
             JSVM jsObjectVM = (JSVM) env->GetObjectField(jsObject, JSObject_jsVM);

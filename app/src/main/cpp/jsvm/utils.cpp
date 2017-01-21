@@ -126,3 +126,50 @@ jsvm::String_createFromStackTop(JNIEnv *env, duk_context *ctx) {
 #endif
 }
 
+void
+jsvm::String_pushUTF16(duk_context *ctx,
+                       const jchar *utf16String,
+                       jsize codePointLength)
+{
+    const jchar *utf16StringEnd = utf16String + codePointLength;
+    
+    std::string cesu8str;
+    cesu8str.reserve((unsigned int) (codePointLength + 1));
+    
+    const jchar* readCharPos;
+    for (readCharPos = utf16String; readCharPos < utf16StringEnd; readCharPos++) {
+        // Note: jchar is unsigned, so there is no weird arithmetic shift.
+        jchar readChar = *readCharPos;
+
+        if (readChar < 0x80) { // 7 bits or less
+            cesu8str.push_back((char) readChar); // 0xxx xxxx
+        } else if (*readCharPos < 0x800) { // 11 bits or less
+            cesu8str.push_back((char) (0xC0 | (readChar >> 6))); // 110x xxxx
+            cesu8str.push_back((char) (0x80 | (readChar & 0x3F))); // 10xx xxxx
+        } else {
+            cesu8str.push_back((char) (0xE0 | (readChar >> 12))); // 1110 xxxx
+            cesu8str.push_back((char) (0x80 | ((readChar >> 6) & 0x3F))); // 10xx xxxx
+            cesu8str.push_back((char) (0x80 | (readChar & 0x3F))); // 10xx xxxx
+        }
+    }
+
+    duk_push_lstring(ctx, cesu8str.data(), cesu8str.size());
+}
+
+void
+jsvm::String_pushJString(JNIEnv *env, jstring string, duk_context *ctx) {
+#ifdef ENABLE_EMBEDDED_NULL_INTEROP
+    jsize codePointLength = env->GetStringLength(string);
+    const jchar *utf16String = env->GetStringCritical(string, NULL);
+
+    String_pushUTF16(ctx, utf16String, codePointLength);
+
+    env->ReleaseStringCritical(string, utf16String);
+#else
+    const char *modifiedUtf8String = env->GetStringUTFChars(string, NULL);
+
+    duk_push_lstring(ctx, modifiedUtf8String, (duk_size_t) env->GetStringLength(string));
+
+    env->ReleaseStringUTFChars(string, modifiedUtf8String);
+#endif
+}
