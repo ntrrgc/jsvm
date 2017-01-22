@@ -4,6 +4,7 @@
 
 #include <jsvm/JSVM.h>
 #include "JSValue.h"
+#include <functional>
 
 using namespace jsvm;
 
@@ -50,6 +51,22 @@ Java_me_ntrrgc_jsvm_JSVM_finalizeNative(JNIEnv *env, jobject instance) {
     delete priv;
 }
 
+static duk_ret_t
+int_function_call(duk_context *ctx, void *udata) {
+    std::function<duk_ret_t()> * function = (std::function<duk_ret_t()> *) udata;
+    return (*function)();
+}
+
+may_throw
+duk_safe_call_lambda(duk_context* ctx, std::function<duk_ret_t()> lambda) {
+    int ret = duk_safe_call(ctx, int_function_call, &lambda, 0, 1);
+    if (ret == 0) {
+        return OK;
+    } else {
+        return THREW_EXCEPTION;
+    }
+}
+
 JNIEXPORT jobject JNICALL
 Java_me_ntrrgc_jsvm_JSVM_evaluateScriptNative(JNIEnv *env, jobject instance, jstring code_) {
     JSVM jsVM = (JSVM) instance;
@@ -66,14 +83,21 @@ Java_me_ntrrgc_jsvm_JSVM_evaluateScriptNative(JNIEnv *env, jobject instance, jst
     }
 
     {
-        duk_eval_string(ctx, code);
-        Result<JSValue> valueResult = JSValue_createFromStack(env, jsVM, -1);
-        if (THREW_EXCEPTION == valueResult.status()) {
+        if (THREW_EXCEPTION == duk_safe_call_lambda(ctx, [ctx, code]() {
+            duk_eval_string(ctx, code);
+            return 1;
+        })) {
+            priv->propagateErrorToJava(env, -1);
             ret = NULL;
         } else {
-            ret = valueResult.get();
+            Result<JSValue> valueResult = JSValue_createFromStack(env, jsVM, -1);
+            if (THREW_EXCEPTION == valueResult.status()) {
+                ret = NULL;
+            } else {
+                ret = valueResult.get();
+            }
+            duk_pop(ctx);
         }
-        duk_pop(ctx);
     }
 
 release:
@@ -149,4 +173,15 @@ JSVMPriv::JSVMPriv(JNIEnv *initialJNIEnv, JSVM initialJSVM)
 JSVMPriv::~JSVMPriv() {
     duk_destroy_heap(ctx);
     ctx = NULL;
+}
+
+void JSVMPriv::propagateErrorToJava(JNIEnv *env, int errorStackPos) {
+    Result<JSValue> jsErrorValueResult = JSValue_createFromStack(env, jsVM, 1);
+    if (THREW_EXCEPTION == jsErrorValueResult.status()) {
+        return;
+    }
+    JSValue jsErrorValue = jsErrorValueResult.get();
+
+    env->Throw((jthrowable) env->NewObject(
+            JSError_Class, JSError_ctor, (jobject) jsErrorValue));
 }

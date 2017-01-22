@@ -59,6 +59,8 @@ namespace jsvm {
             this->jsVM = jsVM;
         }
 
+        void propagateErrorToJava(JNIEnv *env, int errorStackPos);
+
         jmp_buf& allocateExceptionHandler() {
             unhandledExceptionHandlers.push(WrappedJmpBuf());
             return unhandledExceptionHandlers.top().jmpBuf;
