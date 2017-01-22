@@ -43,7 +43,7 @@ Java_me_ntrrgc_jsvm_JSVM_nativeInit(JNIEnv *env, jobject instance) {
 }
 
 JNIEXPORT void JNICALL
-Java_me_ntrrgc_jsvm_JSVM_finalize(JNIEnv *env, jobject instance) {
+Java_me_ntrrgc_jsvm_JSVM_finalizeNative(JNIEnv *env, jobject instance) {
     JSVM jsVM = (JSVM) instance;
 
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);

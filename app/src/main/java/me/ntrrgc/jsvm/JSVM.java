@@ -54,5 +54,13 @@ public class JSVM {
     }
     private native JSValue evaluateScriptNative(String code);
 
-    public native void finalize();
+    /* package */ boolean finalized = false;
+    protected void finalize() {
+        synchronized (this.lock) {
+            this.finalizeNative();
+            finalized = true;
+        }
+    }
+
+    private native void finalizeNative();
 }
