@@ -26,9 +26,14 @@ namespace jsvm {
          * Insert the object at the top of the Duktape stack
          * into the object book and return its handle.
          */
-        handle_t storeStackTop() {
+        handle_t storeStackValue(int stackPosition) {
             assert(m_ctx);
             handle_t handle = allocateHandle();
+
+            // Copy the element at the provided stack position
+            // into the stack top so that it can be referenced
+            // easily and safely.
+            duk_dup(m_ctx, stackPosition);
 
             // Store the object in the book:
 
@@ -41,7 +46,7 @@ namespace jsvm {
             duk_put_prop_index(m_ctx, -2, handle);
 
             // Restore the stack
-            duk_pop_2(m_ctx);
+            duk_pop_3(m_ctx);
 
             return handle;
         }

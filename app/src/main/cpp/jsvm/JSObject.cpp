@@ -8,10 +8,10 @@
 using namespace jsvm;
 
 JSObject
-jsvm::JSObject_createFromStackTop(JNIEnv* env, JSVM jsVM){
+jsvm::JSObject_createFromStack(JNIEnv *env, JSVM jsVM, int stackPosition) {
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
 
-    ObjectBook::handle_t handle = priv->objectBook.storeStackTop();
+    ObjectBook::handle_t handle = priv->objectBook.storeStackValue(stackPosition);
 
     JSObject jsObject = (JSObject) env->NewObject(JSObject_Class, JSObject_ctor);
     env->SetObjectField(jsObject, JSObject_jsVM, jsVM);
@@ -80,7 +80,7 @@ Java_me_ntrrgc_jsvm_JSObject_getByKeyNative(JNIEnv *env, jobject instance, jobje
 
     // Wrap in JSValue
     JSValue ret;
-    Result<JSValue> valueResult = JSValue_createFromStackTop(env, jsVM);
+    Result<JSValue> valueResult = JSValue_createFromStack(env, jsVM, -1);
     if (THREW_EXCEPTION == valueResult.status()) {
         ret = NULL;
     } else {
@@ -110,7 +110,7 @@ Java_me_ntrrgc_jsvm_JSObject_getByIndexNative(JNIEnv *env, jobject instance, job
 
     // Wrap in JSValue
     JSValue ret;
-    Result<JSValue> valueResult = JSValue_createFromStackTop(env, jsVM);
+    Result<JSValue> valueResult = JSValue_createFromStack(env, jsVM, -1);
     if (THREW_EXCEPTION == valueResult.status()) {
         ret = NULL;
     } else {

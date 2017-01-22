@@ -38,7 +38,7 @@ public class JSValueTests {
         Context appContext = InstrumentationRegistry.getTargetContext();
 
         assertEquals("me.ntrrgc.jsvm", appContext.getPackageName());
-        assertEquals("Hello from C++", JSVM.stringFromJNI());
+        assertEquals("Hello from C++, again", JSVM.stringFromJNI());
     }
 
     @Test

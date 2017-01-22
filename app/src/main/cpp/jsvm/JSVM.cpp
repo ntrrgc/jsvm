@@ -67,7 +67,7 @@ Java_me_ntrrgc_jsvm_JSVM_evaluateScriptNative(JNIEnv *env, jobject instance, jst
 
     {
         duk_eval_string(ctx, code);
-        Result<JSValue> valueResult = JSValue_createFromStackTop(env, jsVM);
+        Result<JSValue> valueResult = JSValue_createFromStack(env, jsVM, -1);
         if (THREW_EXCEPTION == valueResult.status()) {
             ret = NULL;
         } else {
@@ -90,7 +90,7 @@ JSVM_onUnhandledJSError(void *priv_, const char *msg) {
     JSVM jsVM = priv->jsVM;
     JNIEnv* env = priv->env;
 
-    Result<JSValue> jsErrorValueResult = JSValue_createFromStackTop(env, jsVM);
+    Result<JSValue> jsErrorValueResult = JSValue_createFromStack(env, jsVM, 1);
     if (THREW_EXCEPTION == jsErrorValueResult.status()) {
         return;
     }

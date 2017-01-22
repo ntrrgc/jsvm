@@ -22,11 +22,11 @@ using namespace jsvm;
  * (corrupted strings can only be created in C++ code).
  */
 Result<JSValue>
-jsvm::JSValue_createFromStackTop(JNIEnv *env, JSVM jsVM) {
+jsvm::JSValue_createFromStack(JNIEnv *env, JSVM jsVM, int stackPosition) {
     JSVMPriv *priv = JSVM_getPriv(env, jsVM);
     duk_context *ctx = priv->ctx;
 
-    duk_int_t dukType = duk_get_type(ctx, -1);
+    duk_int_t dukType = duk_get_type(ctx, stackPosition);
 
     int valueType;
     jobject boxedValue = NULL;
@@ -40,16 +40,16 @@ jsvm::JSValue_createFromStackTop(JNIEnv *env, JSVM jsVM) {
         case DUK_TYPE_BOOLEAN:
             valueType = JSVALUE_TYPE_BOOLEAN;
             boxedValue = env->NewObject(Boolean_Class, Boolean_ctor,
-                                        duk_get_boolean(ctx, -1));
+                                        duk_get_boolean(ctx, stackPosition));
             break;
         case DUK_TYPE_NUMBER:
             valueType = JSVALUE_TYPE_NUMBER;
             boxedValue = env->NewObject(Double_Class, Double_ctor,
-                                        duk_get_number(ctx, -1));
+                                        duk_get_number(ctx, stackPosition));
             break;
         case DUK_TYPE_STRING: {
             valueType = JSVALUE_TYPE_STRING;
-            Result<jstring> resultString = String_createFromStackTop(env, ctx);
+            Result<jstring> resultString = String_createFromStack(env, ctx, stackPosition);
             if (resultString.status() == THREW_EXCEPTION) {
                 return Result<JSValue>::createThrew();
             }
@@ -57,7 +57,7 @@ jsvm::JSValue_createFromStackTop(JNIEnv *env, JSVM jsVM) {
             break; }
         case DUK_TYPE_OBJECT:
             valueType = JSVALUE_TYPE_OBJECT;
-            boxedValue = JSObject_createFromStackTop(env, jsVM);
+            boxedValue = JSObject_createFromStack(env, jsVM, stackPosition);
             break;
         default:
             valueType = JSVALUE_TYPE_UNSUPPORTED;

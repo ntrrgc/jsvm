@@ -87,13 +87,13 @@ decodeCesu8IntoUtf16(JNIEnv *env,
 }
 
 Result<jstring>
-jsvm::String_createFromStackTop(JNIEnv *env, duk_context *ctx) {
+jsvm::String_createFromStack(JNIEnv *env, duk_context *ctx, int stackPosition) {
 #ifdef ENABLE_EMBEDDED_NULL_INTEROP
     // Length of the script in UTF-16 code units (16 bits long),
     // without terminator character.
-    const jsize codeUnitLength = (const jsize) duk_get_length(ctx, -1);
+    const jsize codeUnitLength = (const jsize) duk_get_length(ctx, stackPosition);
     duk_size_t dukStringByteLength;
-    const char * dukString = duk_get_lstring(ctx, -1, &dukStringByteLength);
+    const char * dukString = duk_get_lstring(ctx, stackPosition, &dukStringByteLength);
 
     Result<jstring> ret;
 
@@ -122,7 +122,7 @@ jsvm::String_createFromStackTop(JNIEnv *env, duk_context *ctx) {
 
     return ret;
 #else
-    return Result::ok(env->NewStringUTF(duk_get_string(ctx, -1)));
+    return Result::ok(env->NewStringUTF(duk_get_string(ctx, stackPosition)));
 #endif
 }
 
