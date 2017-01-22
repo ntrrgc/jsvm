@@ -57,7 +57,7 @@ Java_me_ntrrgc_jsvm_JSVM_evaluateScriptNative(JNIEnv *env, jobject instance, jst
 
     const char *code = env->GetStringUTFChars(code_, 0);
 
-    duk_context *ctx = JSVM_getPriv(env, jsVM)->ctx;
+    duk_context *ctx = priv->ctx;
     jobject ret;
 
     if (THREW_EXCEPTION == setjmp(priv->allocateExceptionHandler())) {
