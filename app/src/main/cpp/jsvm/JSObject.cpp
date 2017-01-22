@@ -32,6 +32,13 @@ jsvm::JSObject_push(JNIEnv* env, JSObject jsObject) {
 
 extern "C" {
 
+JNIEXPORT jdouble JNICALL
+Java_me_ntrrgc_jsvm_JSVM_returnADouble(JNIEnv *env, jclass type) {
+
+    return 1.1;
+
+}
+
 JNIEXPORT jstring JNICALL
 Java_me_ntrrgc_jsvm_JSObject_toStringNative(JNIEnv *env, jobject instance, jobject jsVM_,
                                             jint handle) {

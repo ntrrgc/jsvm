@@ -39,6 +39,7 @@ public class JSVM {
      * which is packaged with this application.
      */
     public static native String stringFromJNI();
+    public static native double returnADouble();
 
     private native void nativeInit();
 

@@ -122,7 +122,7 @@ jsvm::String_createFromStack(JNIEnv *env, duk_context *ctx, int stackPosition) {
 
     return ret;
 #else
-    return Result::ok(env->NewStringUTF(duk_get_string(ctx, stackPosition)));
+    return Result<jstring>::createOK(env->NewStringUTF(duk_get_string(ctx, stackPosition)));
 #endif
 }
 
