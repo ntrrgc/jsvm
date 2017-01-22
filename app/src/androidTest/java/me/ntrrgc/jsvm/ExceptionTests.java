@@ -36,4 +36,21 @@ public class ExceptionTests {
         }
         assertTrue(threw);
     }
+
+    @Test
+    public void testUnhandledErrorsInsideFunctionThrow() throws Exception {
+        boolean threw = false;
+        try {
+            jsvm.evaluateScript("function hello() { throw new Error('oops!'); } hello();");
+        } catch (JSError error) {
+            threw = true;
+
+            JSObject errorObject = error.getErrorValue().asObject();
+            assertNotNull(errorObject);
+            assertEquals("oops!", errorObject.get("message").asString());
+
+            assertEquals("oops!", error.getMessage());
+        }
+        assertTrue(threw);
+    }
 }
