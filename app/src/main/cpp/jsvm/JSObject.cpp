@@ -86,18 +86,10 @@ Java_me_ntrrgc_jsvm_JSObject_getByKeyNative(JNIEnv *env, jobject instance, jobje
     duk_get_prop(ctx, -2);
 
     // Wrap in JSValue
-    JSValue ret;
-    Result<JSValue> valueResult = JSValue_createFromStack(env, jsVM, -1);
-    if (THREW_EXCEPTION == valueResult.status()) {
-        ret = NULL;
-    } else {
-        ret = valueResult.get();
-    }
+    return JSValue_createFromStack(env, jsVM, -1);
 
     // Restore stack
     duk_pop_2(ctx);
-
-    return ret;
 }
 
 
@@ -116,19 +108,10 @@ Java_me_ntrrgc_jsvm_JSObject_getByIndexNative(JNIEnv *env, jobject instance, job
     duk_get_prop_index(ctx, -1, (duk_uarridx_t) index);
 
     // Wrap in JSValue
-    JSValue ret;
-    Result<JSValue> valueResult = JSValue_createFromStack(env, jsVM, -1);
-    if (THREW_EXCEPTION == valueResult.status()) {
-        ret = NULL;
-    } else {
-        ret = valueResult.get();
-    }
+    return JSValue_createFromStack(env, jsVM, -1);
 
     // Restore stack
     duk_pop_2(ctx);
-
-    return ret;
-
 }
 
 JNIEXPORT void JNICALL
@@ -143,12 +126,9 @@ Java_me_ntrrgc_jsvm_JSObject_setByKeyNative(JNIEnv *env, jobject instance, jobje
 
     // Set property
     String_pushJString(env, key, ctx);
-    if (THREW_EXCEPTION == JSValue_push(env, (JSValue) value, ctx)) {
-        goto release;
-    }
+    JSValue_push(env, (JSValue) value, ctx);
     duk_put_prop(ctx, -3);
 
-release:
     // Restore stack
     duk_pop(ctx); // objectBook
 }
@@ -165,12 +145,9 @@ Java_me_ntrrgc_jsvm_JSObject_setByIndexNative(JNIEnv *env, jobject instance, job
     priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
 
     // Set property
-    if (THREW_EXCEPTION == JSValue_push(env, (JSValue) value, ctx)) {
-        goto release;
-    }
+    JSValue_push(env, (JSValue) value, ctx);
     duk_put_prop_index(ctx, -2, (duk_uarridx_t) index);
 
-release:
     // Restore stack
     duk_pop(ctx); // objectBook
 }

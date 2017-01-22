@@ -15,7 +15,7 @@ using namespace jsvm;
 JSVMPriv *
 jsvm::JSVM_getPriv(JNIEnv *env, JSVM jsVM) {
     JSVMPriv* priv = (JSVMPriv *) env->GetLongField(jsVM, JSVM_hPriv);
-    priv->setUpEnv(env, jsVM);
+    priv->load(env, jsVM);
     return priv;
 }
 
@@ -29,22 +29,46 @@ duk_raw_function_call(duk_context *ctx, void *udata) {
 
 template<typename T>
 T
-duk_safe_call_lambda(JSVMPriv *priv, JNIEnv *env, duk_context* ctx, std::function<T(duk_context*)> callback) {
+JSVMPriv_invokeSafe(JSVMPriv *priv, std::function<T(duk_context*)> callback) {
+    // T has to be an assignable, concrete type (usually a pointer to a Java object)
     T ret;
-    duk_safe_call_std_function wrappedCallback = [&ret, &callback](duk_context *ctx) {
-        ret = std::move(callback(ctx));
+    // Exceptions may be anything, so we have to use pointers to ensure virtual dispatch.
+    std::unique_ptr<JavaException> capturedJavaException;
+
+    duk_safe_call_std_function wrappedCallback = [&ret, &callback, &capturedJavaException](duk_context *ctx) {
+        try {
+            ret = std::move(callback(ctx));
+        } catch (JavaException& javaException) {
+            capturedJavaException = javaException.moveClone();
+        }
         return 0;
     };
 
-    int jsErrorThrew = duk_safe_call(ctx, duk_raw_function_call, &wrappedCallback, 0, 1);
-    if (jsErrorThrew == 0) {
-        duk_pop(ctx);
-        return ret;
-    } else {
-        assert(env->ExceptionCheck() == JNI_FALSE);
-        priv->propagateErrorToJava(env, -1);
-        duk_pop(ctx);
+    int dukExecRet = duk_safe_call(priv->ctx, duk_raw_function_call, &wrappedCallback, 0, 1);
+
+    if (capturedJavaException) {
+        // A wrapped Java exception has been throw in C++, but not propagated yet to Java!
+        // Propagate it now:
+        JNIEnv* env = priv->env;
+        jsvm_assert(env->ExceptionCheck() == JNI_FALSE);
+        capturedJavaException->propagateToJava(env);
+
+        duk_pop(priv->ctx);
         return NULL;
+    } else if (dukExecRet == DUK_EXEC_ERROR) {
+        // A JavaScript error has been thrown, wrap into a JSError class
+        // and propagate it to Java.
+        JNIEnv* env = priv->env;
+        jsvm_assert(env->ExceptionCheck() == JNI_FALSE);
+        JSError(env, JSValue_createFromStack(env, priv->jsVM, -1)).propagateToJava(env);
+
+        duk_pop(priv->ctx);
+        return NULL;
+    } else {
+        // Successful execution. Return the return value of the provided callback.
+
+        duk_pop(priv->ctx);
+        return ret;
     }
 }
 
@@ -68,7 +92,7 @@ Java_me_ntrrgc_jsvm_JSVM_nativeInit(JNIEnv *env, jobject instance) {
     if (priv->ctx != NULL) {
         env->SetLongField(instance, JSVM_hPriv, (jlong) priv);
     } else {
-        env->ThrowNew(JSRuntimeException_Class, "Failed to create JS heap");
+        env->ThrowNew(JSVMInternalError_Class, "Failed to create JS heap");
     }
 }
 
@@ -85,12 +109,10 @@ Java_me_ntrrgc_jsvm_JSVM_evaluateScriptNative(JNIEnv *env, jobject instance, jst
     JSVM jsVM = (JSVM) instance;
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
 
-    duk_context *ctx = priv->ctx;
-
-    return duk_safe_call_lambda<JSValue>(priv, env, ctx, [env, code, jsVM](duk_context* ctx) -> JSValue {
+    return JSVMPriv_invokeSafe<JSValue>(priv, [priv, env, jsVM, code](duk_context *ctx) {
         String_pushJString(env, code, ctx);
         duk_eval(ctx);
-        return JSValue_createFromStackOrThrow(env, jsVM, -1);
+        return JSValue_createFromStack(env, jsVM, -1);
     });
 }
 
@@ -119,31 +141,11 @@ Java_me_ntrrgc_jsvm_JSVM_getStackSizeNative(JNIEnv *env, jobject instance) {
 
 }
 
-static void
-JSVM_onUnhandledJSError(void *priv_, const char *msg) {
-    JSVMPriv* priv = (JSVMPriv *) priv_;
-    JSVM jsVM = priv->jsVM;
-    JNIEnv* env = priv->env;
-
-    Result<JSValue> jsErrorValueResult = JSValue_createFromStack(env, jsVM, 1);
-    if (THREW_EXCEPTION == jsErrorValueResult.status()) {
-        return;
-    }
-    JSValue jsErrorValue = jsErrorValueResult.get();
-
-    env->Throw((jthrowable) env->NewObject(
-            JSError_Class, JSError_ctor, (jobject) jsErrorValue));
-
-    // Return control to setUpExceptionHandler() and make it
-    // return THREW_EXCEPTION
-    priv->unwindIntoExceptionHandler();
-}
-
 JSVMPriv::JSVMPriv(JNIEnv *initialJNIEnv, JSVM initialJSVM)
         : env(initialJNIEnv), jsVM(initialJSVM)
 {
     ctx = duk_create_heap(
-            NULL, NULL, NULL, this, JSVM_onUnhandledJSError
+            NULL, NULL, NULL, NULL, NULL
     );
     if (ctx == NULL) {
         return;
@@ -161,15 +163,4 @@ JSVMPriv::JSVMPriv(JNIEnv *initialJNIEnv, JSVM initialJSVM)
 JSVMPriv::~JSVMPriv() {
     duk_destroy_heap(ctx);
     ctx = NULL;
-}
-
-void JSVMPriv::propagateErrorToJava(JNIEnv *env, int errorStackPos) {
-    Result<JSValue> jsErrorValueResult = JSValue_createFromStack(env, jsVM, errorStackPos);
-    if (THREW_EXCEPTION == jsErrorValueResult.status()) {
-        return;
-    }
-    JSValue jsErrorValue = jsErrorValueResult.get();
-
-    env->Throw((jthrowable) env->NewObject(
-            JSError_Class, JSError_ctor, (jobject) jsErrorValue));
 }

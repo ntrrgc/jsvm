@@ -34,7 +34,7 @@ namespace jsvm {
         // Used to invoke Java methods and throw Java exceptions.
         JNIEnv *env;
         // Pointer to the instance of JSVM in Java.
-        // It's only valid since setUpEnv() is called
+        // It's only valid since load() is called
         // until control returns to Java code.
         JSVM jsVM;
 
@@ -54,30 +54,10 @@ namespace jsvm {
          * to thread... But this is not a problem since
          * JSVM instances are synchronized.
          */
-        void setUpEnv(JNIEnv *env, JSVM jsVM) {
+        void load(JNIEnv *env, JSVM jsVM) {
             this->env = env;
             this->jsVM = jsVM;
         }
-
-        void propagateErrorToJava(JNIEnv *env, int errorStackPos);
-
-        jmp_buf& allocateExceptionHandler() {
-            unhandledExceptionHandlers.push(WrappedJmpBuf());
-            return unhandledExceptionHandlers.top().jmpBuf;
-        }
-
-        void tearDownExceptionHandler() {
-            assert(!unhandledExceptionHandlers.empty());
-            unhandledExceptionHandlers.pop();
-        }
-
-        void unwindIntoExceptionHandler() {
-            long * x = unhandledExceptionHandlers.top().jmpBuf;
-            longjmp(x, THREW_EXCEPTION);
-        }
-
-    private:
-        std::stack<WrappedJmpBuf> unhandledExceptionHandlers;
     };
 
     JSVMPriv * JSVM_getPriv(JNIEnv *env, JSVM jsVM);

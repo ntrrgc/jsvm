@@ -2,6 +2,7 @@ package me.ntrrgc.jsvm;
 
 import android.support.test.runner.AndroidJUnit4;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,6 +18,11 @@ public class ExceptionTests {
     @Before
     public void setUp() {
         jsvm = new JSVM();
+        assertEquals(0, jsvm.getStackSize());
+    }
+
+    @After
+    public void tearDown() {
         assertEquals(0, jsvm.getStackSize());
     }
 

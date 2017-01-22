@@ -4,10 +4,12 @@
 
 #pragma once
 
-#include <cassert>
-
 #include <jni.h>
 #include <duktape/duktape.h>
+
+#include <stdexcept>
+#include <memory>
+#include <utility>
 
 #include <jsvm/exceptions.h>
 #include <jsvm/javaClasses.h>

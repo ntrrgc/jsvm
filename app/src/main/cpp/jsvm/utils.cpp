@@ -8,6 +8,8 @@
 #include "utils.h"
 #include <sstream>
 #include <iomanip>
+#include <vector>
+
 using namespace jsvm;
 
 /**
@@ -26,7 +28,7 @@ using namespace jsvm;
  * string in 16 bit code units. Only used in debug mode: an assertion
  * error will be throw if exceeded.
  */
-static may_throw
+static void
 decodeCesu8IntoUtf16(JNIEnv *env,
                      jchar* dstUtf16String, const char* cesu8StringSigned,
                      duk_size_t cesu8StringByteLength,
@@ -47,7 +49,7 @@ decodeCesu8IntoUtf16(JNIEnv *env,
          readChar < cesu8StringEnd;
          readChar++, writeChar++)
     {
-        assert(writeChar < dstUtf16StringEnd);
+        jsvm_assert(writeChar < dstUtf16StringEnd);
 
         jchar newChar;
 
@@ -57,36 +59,33 @@ decodeCesu8IntoUtf16(JNIEnv *env,
             newChar = static_cast<jchar>(*readChar & 0x1F) << 6;
 
             readChar++;
-            assert(readChar < cesu8StringEnd);
-            assert((*readChar & 0xC0) == 0x80); // 10xx xxxx
+            jsvm_assert(readChar < cesu8StringEnd);
+            jsvm_assert((*readChar & 0xC0) == 0x80); // 10xx xxxx
             newChar = newChar | static_cast<jchar>(*readChar & 0x3F);
         } else if ((*readChar & 0xF0) == 0xE0) { // 1110 xxxx
             newChar = static_cast<jchar>(*readChar & 0x0F) << 12;
 
             readChar++;
-            assert(readChar < cesu8StringEnd);
-            assert((*readChar & 0xC0) == 0x80); // 10xx xxxx
+            jsvm_assert(readChar < cesu8StringEnd);
+            jsvm_assert((*readChar & 0xC0) == 0x80); // 10xx xxxx
             newChar = newChar | (static_cast<jchar>(*readChar & 0x3F) << 6);
 
             readChar++;
-            assert(readChar < cesu8StringEnd);
-            assert((*readChar & 0xC0) == 0x80); // 10xx xxxx
+            jsvm_assert(readChar < cesu8StringEnd);
+            jsvm_assert((*readChar & 0xC0) == 0x80); // 10xx xxxx
             newChar = newChar | static_cast<jchar>(*readChar & 0x3F);
         } else {
             std::stringstream ss;
             ss << "Unexpected CESU-8 header: 0x" << std::hex
                 << static_cast<int>(*readChar);
-            env->ThrowNew(JSRuntimeException_Class, ss.str().c_str());
-            return THREW_EXCEPTION;
+            throw JSVMInternalError(ss.str());
         }
 
         *writeChar = newChar;
     }
-
-    return OK;
 }
 
-Result<jstring>
+jstring
 jsvm::String_createFromStack(JNIEnv *env, duk_context *ctx, int stackPosition) {
 #ifdef ENABLE_EMBEDDED_NULL_INTEROP
     // Length of the script in UTF-16 code units (16 bits long),
@@ -95,34 +94,21 @@ jsvm::String_createFromStack(JNIEnv *env, duk_context *ctx, int stackPosition) {
     duk_size_t dukStringByteLength;
     const char * dukString = duk_get_lstring(ctx, stackPosition, &dukStringByteLength);
 
-    Result<jstring> ret;
-
     if (codeUnitLength <= 256) {
         jchar utf16String[codeUnitLength];
 
-        if (THREW_EXCEPTION == decodeCesu8IntoUtf16(env, utf16String, dukString,
-                                                    dukStringByteLength, codeUnitLength)) {
-            ret = Result<jstring>::createThrew();
-        } else {
-            ret = Result<jstring>::createOK(env->NewString(utf16String, codeUnitLength));
-        }
-
+        decodeCesu8IntoUtf16(env, utf16String, dukString, dukStringByteLength, codeUnitLength);
+        return env->NewString(utf16String, codeUnitLength);
     } else {
-        jchar* utf16String = new jchar[codeUnitLength];
+        std::vector<jchar> utf16String(codeUnitLength);
 
-        if (THREW_EXCEPTION == decodeCesu8IntoUtf16(env, utf16String, dukString,
-                                                    dukStringByteLength, codeUnitLength)) {
-            ret = Result<jstring>::createThrew();
-        } else {
-            ret = Result<jstring>::createOK(env->NewString(utf16String, codeUnitLength));
-        }
+        decodeCesu8IntoUtf16(env, utf16String.data(), dukString,
+                             dukStringByteLength, codeUnitLength);
 
-        delete[] utf16String;
+        return env->NewString(utf16String.data(), codeUnitLength);
     }
-
-    return ret;
 #else
-    return Result<jstring>::createOK(env->NewStringUTF(duk_get_string(ctx, stackPosition)));
+    return env->NewStringUTF(duk_get_string(ctx, stackPosition));
 #endif
 }
 

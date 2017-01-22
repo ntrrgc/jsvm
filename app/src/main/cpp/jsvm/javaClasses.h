@@ -19,12 +19,14 @@ namespace jsvm {
     extern jclass       JSVM_Class;
     extern jfieldID     JSVM_hPriv;
 
-    extern jclass       JSRuntimeException_Class;
+    extern jclass       JSVMInternalError_Class;
+    extern jmethodID    JSVMInternalError_ctor;
 
     extern jclass       JSError_Class;
     extern jmethodID    JSError_ctor;
 
     extern jclass       IllegalArgumentException_Class;
+    extern jmethodID    IllegalArgumentException_ctor;
 
     extern jclass       AttemptedToUseObjectFromOtherVM_Class;
     extern jmethodID    AttemptedToUseObjectFromOtherVM_ctor;

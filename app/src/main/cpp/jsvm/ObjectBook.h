@@ -27,7 +27,7 @@ namespace jsvm {
          * into the object book and return its handle.
          */
         handle_t storeStackValue(int stackPosition) {
-            assert(m_ctx);
+            jsvm_assert(m_ctx);
             handle_t handle = allocateHandle();
 
             // Copy the element at the provided stack position
@@ -59,8 +59,8 @@ namespace jsvm {
          * next allocated object.
          */
         void removeObjectWithHandle(handle_t handle) {
-            assert(m_ctx);
-            assert(handle < m_nextFree);
+            jsvm_assert(m_ctx);
+            jsvm_assert(handle < m_nextFree);
 
             // Get the object book
             duk_push_global_stash(m_ctx);
@@ -81,8 +81,8 @@ namespace jsvm {
          * and push it to the top of the Duktape stack.
          */
         void pushObjectWithHandle(handle_t handle) {
-            assert(m_ctx);
-            assert(handle < m_nextFree);
+            jsvm_assert(m_ctx);
+            jsvm_assert(handle < m_nextFree);
 
             // Get the object book
             duk_push_global_stash(m_ctx);
@@ -104,8 +104,8 @@ namespace jsvm {
 
         ObjectBook() : m_ctx(NULL), m_nextFree(0) { }
         void lateInit(duk_context *ctx) {
-            assert(ctx);
-            assert(this->m_ctx == NULL);
+            jsvm_assert(ctx);
+            jsvm_assert(this->m_ctx == NULL);
             this->m_ctx = ctx;
 
             // Initialize the book object

@@ -21,7 +21,7 @@ using namespace jsvm;
  * May throw if the stack top contains a corrupted string
  * (corrupted strings can only be created in C++ code).
  */
-Result<JSValue>
+JSValue
 jsvm::JSValue_createFromStack(JNIEnv *env, JSVM jsVM, int stackPosition) {
     JSVMPriv *priv = JSVM_getPriv(env, jsVM);
     duk_context *ctx = priv->ctx;
@@ -49,11 +49,7 @@ jsvm::JSValue_createFromStack(JNIEnv *env, JSVM jsVM, int stackPosition) {
             break;
         case DUK_TYPE_STRING: {
             valueType = JSVALUE_TYPE_STRING;
-            Result<jstring> resultString = String_createFromStack(env, ctx, stackPosition);
-            if (resultString.status() == THREW_EXCEPTION) {
-                return Result<JSValue>::createThrew();
-            }
-            boxedValue = resultString.get();
+            boxedValue = String_createFromStack(env, ctx, stackPosition);
             break; }
         case DUK_TYPE_OBJECT:
             valueType = JSVALUE_TYPE_OBJECT;
@@ -67,20 +63,15 @@ jsvm::JSValue_createFromStack(JNIEnv *env, JSVM jsVM, int stackPosition) {
     env->SetIntField(jsValue, JSValue_type, valueType);
     env->SetObjectField(jsValue, JSValue_value, boxedValue);
 
-    return Result<JSValue>::createOK(jsValue);
+    return jsValue;
 }
 
-JSValue
-jsvm::JSValue_createFromStackOrThrow(JNIEnv *env, JSVM jsVM, int stackPosition) {
-    Result<JSValue> ret = JSValue_createFromStack(env, jsVM, stackPosition);
-    if (THREW_EXCEPTION != ret.status()) {
-        return ret.get();
-    } else {
-        throw ThrewJavaException();
-    }
-}
-
-may_throw
+/**
+ * May throw:
+ * - AttemptedToUseObjectFromOtherVM
+ * - IllegalArgumentException
+ */
+void
 jsvm::JSValue_push(JNIEnv *env, JSValue jsValue, duk_context *ctx) {
     int valueType = env->GetIntField(jsValue, JSValue_type);
     jobject boxedValue = env->GetObjectField(jsValue, JSValue_value);
@@ -107,24 +98,14 @@ jsvm::JSValue_push(JNIEnv *env, JSValue jsValue, duk_context *ctx) {
             duk_context* objectContext = JSVM_getPriv(env, jsObjectVM)->ctx;
 
             if (objectContext != ctx) {
-                jthrowable err = (jthrowable) env->NewObject(
-                                        AttemptedToUseObjectFromOtherVM_Class,
-                                        AttemptedToUseObjectFromOtherVM_ctor,
-                                        jsObject, jsObjectVM);
-                env->Throw(err);
-                return THREW_EXCEPTION;
+                throw AttemptedToUseObjectFromOtherVM(env, jsObject, jsObjectVM);
             }
 
             JSObject_push(env, jsObject);
             break; }
         case JSVALUE_TYPE_UNSUPPORTED:
-            env->ThrowNew(IllegalArgumentException_Class,
-                          "Attempted to use JSValue of unsupported type");
-            return THREW_EXCEPTION;
+            throw IllegalArgumentException(env, "Attempted to use JSValue of unsupported type");
         default:
-            env->ThrowNew(JSRuntimeException_Class, "Unknown JSValue type");
-            return THREW_EXCEPTION;
+            throw JSVMInternalError("Unknown JSValue type");
     }
-
-    return OK;
 }

@@ -5,58 +5,94 @@
 #ifndef JSVM_EXCEPTIONS_H
 #define JSVM_EXCEPTIONS_H
 
-#include <stdexcept>
+#include <stdafx.h>
 
 namespace jsvm {
 
-    class ThrewJavaException: public std::exception {};
-    class InternalError: public std::runtime_error {
-        InternalError(const char *message) : std::runtime_error(message) {}
+#ifndef NDEBUG
+#define	jsvm_assert(e) ((e) ? (void)0 : _throwAssertionFailed(__FILE__, __LINE__, __func__, #e))
+#else
+#define jsvm_assert(e) ((void)0)
+#endif
+
+    void _throwAssertionFailed(const char *file, int line, const char *functionName,
+                               const char *expression);
+
+    class JavaException: public std::exception {
+    public:
+        virtual void propagateToJava(JNIEnv* env) = 0;
+        virtual std::unique_ptr<JavaException> moveClone() throw() = 0;
     };
 
-    enum may_throw {
-        OK = 0,
-        THREW_EXCEPTION = -1,
-        STATUS_UNDEFINED = -2
-    };
+    class JSVMInternalError final: public JavaException {
+    public:
+        JSVMInternalError(const std::string& message) : m_message(message) {}
 
-    template<class T> struct Result {
-        Result(): m_status(STATUS_UNDEFINED) {}
+        virtual void propagateToJava(JNIEnv *env) override;
 
-        may_throw status() const {
-            return m_status;
-        }
-
-        T& get() const {
-            assert(m_status == OK);
-            return m_valueUnion.value;
-        }
-
-        T& get() {
-            assert(m_status == OK);
-            return m_valueUnion.value;
-        }
-
-        static Result<T> createOK(const T &value) {
-            Result<T> result;
-            result.m_status = OK;
-            result.m_valueUnion.value = value;
-            return result;
-        }
-
-        static Result<T> createThrew() {
-            Result<T> result;
-            result.m_status = THREW_EXCEPTION;
-            return result;
+        virtual std::unique_ptr<JavaException> moveClone() throw() override {
+            return std::unique_ptr<JavaException>(new JSVMInternalError(m_message));
         }
 
     private:
-        union ValueUnion {
-            T value;
-        };
+        std::string m_message;
+    };
 
-        may_throw m_status;
-        ValueUnion m_valueUnion;
+    /**
+     * Convenience superclass used by most other exceptions.
+     */
+    class InstantiatedJavaException: public JavaException {
+    public:
+        InstantiatedJavaException(jthrowable errorObject): m_errorObject(errorObject) {}
+        virtual ~InstantiatedJavaException() {}
+
+        virtual void propagateToJava(JNIEnv* env) override {
+            jsvm_assert(env->ExceptionCheck() == JNI_FALSE);
+            env->Throw(m_errorObject);
+        }
+
+    protected:
+        jthrowable m_errorObject;
+    };
+
+    class IllegalArgumentException final: public InstantiatedJavaException {
+    public:
+        IllegalArgumentException(JNIEnv* env, const std::string& message);
+
+        virtual std::unique_ptr<JavaException> moveClone() throw() override {
+            return std::unique_ptr<JavaException>(new IllegalArgumentException(m_errorObject));
+        }
+
+    private:
+        IllegalArgumentException(jthrowable errorObject): InstantiatedJavaException(errorObject) {}
+    };
+
+    class _JSValue;
+    class _JSObject;
+    class _JSVM;
+
+    class JSError final: public InstantiatedJavaException {
+    public:
+        JSError(JNIEnv* env, _JSValue* jsErrorValue);
+
+        virtual std::unique_ptr<JavaException> moveClone() throw() override {
+            return std::unique_ptr<JavaException>(new JSError(m_errorObject));
+        }
+
+    private:
+        JSError(jthrowable errorObject): InstantiatedJavaException(errorObject) {}
+    };
+
+    class AttemptedToUseObjectFromOtherVM final: public InstantiatedJavaException {
+    public:
+        AttemptedToUseObjectFromOtherVM(JNIEnv* env, _JSObject* jsObject, _JSVM* jsVM);
+
+        virtual std::unique_ptr<JavaException> moveClone() throw() override {
+            return std::unique_ptr<JavaException>(new AttemptedToUseObjectFromOtherVM(m_errorObject));
+        }
+
+    private:
+        AttemptedToUseObjectFromOtherVM(jthrowable errorObject): InstantiatedJavaException(errorObject) {}
     };
 
 }

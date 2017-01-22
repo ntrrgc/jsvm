@@ -16,12 +16,14 @@ namespace jsvm {
     jclass      JSVM_Class = NULL;
     jfieldID    JSVM_hPriv = NULL;
 
-    jclass      JSRuntimeException_Class = NULL;
+    jclass      JSVMInternalError_Class = NULL;
+    jmethodID   JSVMInternalError_ctor = NULL;
 
     jclass      JSError_Class = NULL;
     jmethodID   JSError_ctor = NULL;
 
     jclass      IllegalArgumentException_Class = NULL;
+    jmethodID   IllegalArgumentException_ctor = NULL;
 
     jclass      AttemptedToUseObjectFromOtherVM_Class = NULL;
     jmethodID   AttemptedToUseObjectFromOtherVM_ctor = NULL;
@@ -69,13 +71,17 @@ void ::jsvm::initClassesAndFields(JNIEnv *env) {
     JSVM_Class = findClass(env, "me/ntrrgc/jsvm/JSVM");
     JSVM_hPriv = env->GetFieldID(JSVM_Class, "hPriv", "J");
 
-    JSRuntimeException_Class = findClass(env, "me/ntrrgc/jsvm/JSRuntimeException");
+    JSVMInternalError_Class = findClass(env, "me/ntrrgc/jsvm/JSVMInternalError");
+    JSVMInternalError_ctor = env->GetMethodID(JSVMInternalError_Class, "<init>",
+                                              "(Ljava/lang/String;)V");
 
     JSError_Class = findClass(env, "me/ntrrgc/jsvm/JSError");
     JSError_ctor = env->GetMethodID(JSError_Class, "<init>",
                                     "(Lme/ntrrgc/jsvm/JSValue;)V");
 
     IllegalArgumentException_Class = findClass(env, "java/lang/IllegalArgumentException");
+    IllegalArgumentException_ctor = env->GetMethodID(IllegalArgumentException_Class, "<init>",
+                                                     "(Ljava/lang/String;)V");
 
     AttemptedToUseObjectFromOtherVM_Class = findClass(env, "me/ntrrgc/jsvm/AttemptedToUseObjectFromOtherVM");
     AttemptedToUseObjectFromOtherVM_ctor =
@@ -98,7 +104,7 @@ void ::jsvm::tearDownClassesAndFields(JNIEnv *env) {
     removeClass(env, &Boolean_Class);
     removeClass(env, &Double_Class);
     removeClass(env, &JSVM_Class);
-    removeClass(env, &JSRuntimeException_Class);
+    removeClass(env, &JSVMInternalError_Class);
     removeClass(env, &JSValue_Class);
     removeClass(env, &JSObject_Class);
 }
