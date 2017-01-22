@@ -19,6 +19,35 @@ jsvm::JSVM_getPriv(JNIEnv *env, JSVM jsVM) {
     return priv;
 }
 
+typedef std::function<duk_ret_t(duk_context*)> duk_safe_call_std_function;
+
+static duk_ret_t
+duk_raw_function_call(duk_context *ctx, void *udata) {
+    duk_safe_call_std_function * function = (duk_safe_call_std_function *) udata;
+    return (*function)(ctx);
+}
+
+template<typename T>
+T
+duk_safe_call_lambda(JSVMPriv *priv, JNIEnv *env, duk_context* ctx, std::function<T(duk_context*)> callback) {
+    T ret;
+    duk_safe_call_std_function wrappedCallback = [&ret, &callback](duk_context *ctx) {
+        ret = std::move(callback(ctx));
+        return 0;
+    };
+
+    int jsErrorThrew = duk_safe_call(ctx, duk_raw_function_call, &wrappedCallback, 0, 1);
+    if (jsErrorThrew == 0) {
+        duk_pop(ctx);
+        return ret;
+    } else {
+        assert(env->ExceptionCheck() == JNI_FALSE);
+        priv->propagateErrorToJava(env, -1);
+        duk_pop(ctx);
+        return NULL;
+    }
+}
+
 extern "C" {
 
 JNIEXPORT void JNICALL
@@ -51,59 +80,18 @@ Java_me_ntrrgc_jsvm_JSVM_finalizeNative(JNIEnv *env, jobject instance) {
     delete priv;
 }
 
-static duk_ret_t
-int_function_call(duk_context *ctx, void *udata) {
-    std::function<duk_ret_t()> * function = (std::function<duk_ret_t()> *) udata;
-    return (*function)();
-}
-
-may_throw
-duk_safe_call_lambda(duk_context* ctx, std::function<duk_ret_t()> lambda) {
-    int ret = duk_safe_call(ctx, int_function_call, &lambda, 0, 1);
-    if (ret == 0) {
-        return OK;
-    } else {
-        return THREW_EXCEPTION;
-    }
-}
-
 JNIEXPORT jobject JNICALL
-Java_me_ntrrgc_jsvm_JSVM_evaluateScriptNative(JNIEnv *env, jobject instance, jstring code_) {
+Java_me_ntrrgc_jsvm_JSVM_evaluateScriptNative(JNIEnv *env, jobject instance, jstring code) {
     JSVM jsVM = (JSVM) instance;
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
 
-    const char *code = env->GetStringUTFChars(code_, 0);
-
     duk_context *ctx = priv->ctx;
-    jobject ret;
 
-    if (THREW_EXCEPTION == setjmp(priv->allocateExceptionHandler())) {
-        ret = NULL;
-        goto release;
-    }
-
-    {
-        if (THREW_EXCEPTION == duk_safe_call_lambda(ctx, [ctx, code]() {
-            duk_eval_string(ctx, code);
-            return 1;
-        })) {
-            priv->propagateErrorToJava(env, -1);
-            ret = NULL;
-        } else {
-            Result<JSValue> valueResult = JSValue_createFromStack(env, jsVM, -1);
-            if (THREW_EXCEPTION == valueResult.status()) {
-                ret = NULL;
-            } else {
-                ret = valueResult.get();
-            }
-            duk_pop(ctx);
-        }
-    }
-
-release:
-    priv->tearDownExceptionHandler();
-    env->ReleaseStringUTFChars(code_, code);
-    return ret;
+    return duk_safe_call_lambda<JSValue>(priv, env, ctx, [env, code, jsVM](duk_context* ctx) -> JSValue {
+        String_pushJString(env, code, ctx);
+        duk_eval(ctx);
+        return JSValue_createFromStackOrThrow(env, jsVM, -1);
+    });
 }
 
 
@@ -176,7 +164,7 @@ JSVMPriv::~JSVMPriv() {
 }
 
 void JSVMPriv::propagateErrorToJava(JNIEnv *env, int errorStackPos) {
-    Result<JSValue> jsErrorValueResult = JSValue_createFromStack(env, jsVM, 1);
+    Result<JSValue> jsErrorValueResult = JSValue_createFromStack(env, jsVM, errorStackPos);
     if (THREW_EXCEPTION == jsErrorValueResult.status()) {
         return;
     }

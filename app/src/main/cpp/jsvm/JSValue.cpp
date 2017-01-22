@@ -70,6 +70,16 @@ jsvm::JSValue_createFromStack(JNIEnv *env, JSVM jsVM, int stackPosition) {
     return Result<JSValue>::createOK(jsValue);
 }
 
+JSValue
+jsvm::JSValue_createFromStackOrThrow(JNIEnv *env, JSVM jsVM, int stackPosition) {
+    Result<JSValue> ret = JSValue_createFromStack(env, jsVM, stackPosition);
+    if (THREW_EXCEPTION != ret.status()) {
+        return ret.get();
+    } else {
+        throw ThrewJavaException();
+    }
+}
+
 may_throw
 jsvm::JSValue_push(JNIEnv *env, JSValue jsValue, duk_context *ctx) {
     int valueType = env->GetIntField(jsValue, JSValue_type);

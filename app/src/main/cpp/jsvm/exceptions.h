@@ -5,7 +5,14 @@
 #ifndef JSVM_EXCEPTIONS_H
 #define JSVM_EXCEPTIONS_H
 
+#include <stdexcept>
+
 namespace jsvm {
+
+    class ThrewJavaException: public std::exception {};
+    class InternalError: public std::runtime_error {
+        InternalError(const char *message) : std::runtime_error(message) {}
+    };
 
     enum may_throw {
         OK = 0,

@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <stdexcept>
 #include <cassert>
 
 #include <jni.h>
