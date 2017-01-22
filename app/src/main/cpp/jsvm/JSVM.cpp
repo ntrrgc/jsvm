@@ -135,7 +135,8 @@ Java_me_ntrrgc_jsvm_JSVM_getStackSizeNative(JNIEnv *env, jobject instance) {
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
     duk_context* ctx = priv->ctx;
 
-    return (int) duk_get_top_index(ctx);
+    duk_idx_t topIndex = duk_get_top_index(ctx);
+    return topIndex != DUK_INVALID_INDEX ? (int) topIndex - 1 : 0;
 
 }
 
