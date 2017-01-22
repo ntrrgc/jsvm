@@ -4,8 +4,7 @@
 
 #pragma once
 
-#include <jni.h>
-#include <string>
+#include <stdafx.h>
 
 namespace jsvm {
 

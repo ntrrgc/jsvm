@@ -135,7 +135,7 @@ jsvm::String_pushUTF16(duk_context *ctx,
     
     std::string cesu8str;
     cesu8str.reserve((unsigned int) (codePointLength + 1));
-    
+
     const jchar* readCharPos;
     for (readCharPos = utf16String; readCharPos < utf16StringEnd; readCharPos++) {
         // Note: jchar is unsigned, so there is no weird arithmetic shift.
