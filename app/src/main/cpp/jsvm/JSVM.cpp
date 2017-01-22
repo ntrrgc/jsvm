@@ -153,9 +153,9 @@ JSVMPriv::JSVMPriv(JNIEnv *initialJNIEnv, JSVM initialJSVM)
 
     // Make global object accessible with "global".
     duk_push_global_object(ctx);
-    duk_push_string(ctx, "global");
     duk_push_global_object(ctx);
-    duk_put_prop(ctx, -3);
+    duk_put_prop_string(ctx, -2, "global");
+    duk_pop(ctx);
 
     this->objectBook.lateInit(ctx);
 }
