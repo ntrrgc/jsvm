@@ -62,17 +62,17 @@ public class JSObject {
     public String toString() {
         if (!aliveHandle) throw new UsedFinalizedJSObject(this);
         synchronized (jsVM.lock) {
-            return this.toStringNative(jsVM.hPriv, handle);
+            return this.toStringNative(jsVM, handle);
         }
     }
-    private native String toStringNative(long hPriv, int handle);
+    private native String toStringNative(JSVM jsVM, int handle);
 
     public void finalize() {
         if (aliveHandle) {
             aliveHandle = false;
-            finalizeNative(jsVM.hPriv, handle);
+            finalizeNative(jsVM, handle);
         }
     }
 
-    private native void finalizeNative(long hPriv, int handle);
+    private native void finalizeNative(JSVM jsVM, int handle);
 }

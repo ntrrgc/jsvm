@@ -16,18 +16,18 @@ import org.jetbrains.annotations.NotNull;
  * Created by ntrrgc on 1/21/17.
  */
 public final class JSError extends RuntimeException {
-    // Fun fact: jsError may be not be a JS object.
+    // Fun fact: errorValue may be not be a object.
     // Albeit less helpful, `throw "whatever";`, or even
     // `throw undefined;` are valid JavaScript.
-    private final JSValue jsError;
+    private final JSValue errorValue;
 
-    public JSError(@NotNull JSValue jsError) {
-        super(extractErrorMessage(jsError));
-        this.jsError = jsError;
+    public JSError(@NotNull JSValue errorValue) {
+        super(extractErrorMessage(errorValue));
+        this.errorValue = errorValue;
     }
 
-    public JSValue getJsError() {
-        return jsError;
+    public JSValue getErrorValue() {
+        return errorValue;
     }
 
     @NotNull

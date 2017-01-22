@@ -33,10 +33,11 @@ jsvm::JSObject_push(JNIEnv* env, JSObject jsObject) {
 extern "C" {
 
 JNIEXPORT jstring JNICALL
-Java_me_ntrrgc_jsvm_JSObject_toStringNative(JNIEnv *env, jobject instance, jlong hPriv,
+Java_me_ntrrgc_jsvm_JSObject_toStringNative(JNIEnv *env, jobject instance, jobject jsVM_,
                                             jint handle) {
 
-    JSVMPriv* priv = (JSVMPriv *) hPriv;
+    JSVM jsVM = (JSVM) jsVM_;
+    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
     duk_context* ctx = priv->ctx;
 
     // Retrieve the object
@@ -52,10 +53,11 @@ Java_me_ntrrgc_jsvm_JSObject_toStringNative(JNIEnv *env, jobject instance, jlong
 }
 
 JNIEXPORT void JNICALL
-Java_me_ntrrgc_jsvm_JSObject_finalizeNative(JNIEnv *env, jobject instance, jlong hPriv,
+Java_me_ntrrgc_jsvm_JSObject_finalizeNative(JNIEnv *env, jobject instance, jobject jsVM_,
                                             jint handle) {
 
-    JSVMPriv* priv = (JSVMPriv *) hPriv;
+    JSVM jsVM = (JSVM) jsVM_;
+    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
 
     priv->objectBook.removeObjectWithHandle((ObjectBook::handle_t) handle);
 

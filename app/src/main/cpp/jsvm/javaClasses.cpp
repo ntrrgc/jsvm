@@ -18,6 +18,9 @@ namespace jsvm {
 
     jclass      JSRuntimeException_Class = NULL;
 
+    jclass      JSError_Class = NULL;
+    jmethodID   JSError_ctor = NULL;
+
     jclass      IllegalArgumentException_Class = NULL;
 
     jclass      AttemptedToUseObjectFromOtherVM_Class = NULL;
@@ -67,6 +70,10 @@ void ::jsvm::initClassesAndFields(JNIEnv *env) {
     JSVM_hPriv = env->GetFieldID(JSVM_Class, "hPriv", "J");
 
     JSRuntimeException_Class = findClass(env, "me/ntrrgc/jsvm/JSRuntimeException");
+
+    JSError_Class = findClass(env, "me/ntrrgc/jsvm/JSError");
+    JSError_ctor = env->GetMethodID(JSError_Class, "<init>",
+                                    "(Lme/ntrrgc/jsvm/JSValue;)V");
 
     IllegalArgumentException_Class = findClass(env, "java/lang/IllegalArgumentException");
 

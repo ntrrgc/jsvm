@@ -7,9 +7,15 @@
 
 using namespace jsvm;
 
+/**
+ * Get a JSVMPriv object with its JNIEnv and JSVM pointers
+ * already set so that Duktape functions can be called safely.
+ */
 JSVMPriv *
 jsvm::JSVM_getPriv(JNIEnv *env, JSVM jsVM) {
-    return (JSVMPriv *) env->GetLongField(jsVM, JSVM_hPriv);
+    JSVMPriv* priv = (JSVMPriv *) env->GetLongField(jsVM, JSVM_hPriv);
+    priv->setUpEnv(env, jsVM);
+    return priv;
 }
 
 extern "C" {
@@ -26,7 +32,8 @@ Java_me_ntrrgc_jsvm_JSVM_destroyLibrary(JNIEnv *env, jclass type) {
 
 JNIEXPORT void JNICALL
 Java_me_ntrrgc_jsvm_JSVM_nativeInit(JNIEnv *env, jobject instance) {
-    JSVMPriv *priv = new JSVMPriv();
+    JSVM jsVM = (JSVM) instance;
+    JSVMPriv *priv = new JSVMPriv(env, jsVM);
 
     if (priv->ctx != NULL) {
         env->SetLongField(instance, JSVM_hPriv, (jlong) priv);
@@ -46,29 +53,62 @@ Java_me_ntrrgc_jsvm_JSVM_finalize(JNIEnv *env, jobject instance) {
 JNIEXPORT jobject JNICALL
 Java_me_ntrrgc_jsvm_JSVM_evaluateScriptNative(JNIEnv *env, jobject instance, jstring code_) {
     JSVM jsVM = (JSVM) instance;
+    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+
     const char *code = env->GetStringUTFChars(code_, 0);
 
     duk_context *ctx = JSVM_getPriv(env, jsVM)->ctx;
     jobject ret;
 
-    duk_eval_string(ctx, code);
-    Result<JSValue> valueResult = JSValue_createFromStackTop(env, jsVM);
-    if (THREW_EXCEPTION == valueResult.status()) {
+    if (THREW_EXCEPTION == setjmp(priv->allocateExceptionHandler())) {
         ret = NULL;
-    } else {
-        ret = valueResult.get();
+        goto release;
     }
-    duk_pop(ctx);
 
+    {
+        duk_eval_string(ctx, code);
+        Result<JSValue> valueResult = JSValue_createFromStackTop(env, jsVM);
+        if (THREW_EXCEPTION == valueResult.status()) {
+            ret = NULL;
+        } else {
+            ret = valueResult.get();
+        }
+        duk_pop(ctx);
+    }
+
+release:
+    priv->tearDownExceptionHandler();
     env->ReleaseStringUTFChars(code_, code);
     return ret;
 }
 
 }
 
-JSVMPriv::JSVMPriv() {
+static void
+JSVM_onUnhandledJSError(void *priv_, const char *msg) {
+    JSVMPriv* priv = (JSVMPriv *) priv_;
+    JSVM jsVM = priv->jsVM;
+    JNIEnv* env = priv->env;
+
+    Result<JSValue> jsErrorValueResult = JSValue_createFromStackTop(env, jsVM);
+    if (THREW_EXCEPTION == jsErrorValueResult.status()) {
+        return;
+    }
+    JSValue jsErrorValue = jsErrorValueResult.get();
+
+    env->Throw((jthrowable) env->NewObject(
+            JSError_Class, JSError_ctor, (jobject) jsErrorValue));
+
+    // Return control to setUpExceptionHandler() and make it
+    // return THREW_EXCEPTION
+    priv->unwindIntoExceptionHandler();
+}
+
+JSVMPriv::JSVMPriv(JNIEnv *initialJNIEnv, JSVM initialJSVM)
+        : env(initialJNIEnv), jsVM(initialJSVM)
+{
     ctx = duk_create_heap(
-            NULL, NULL, NULL, NULL, NULL
+            NULL, NULL, NULL, this, JSVM_onUnhandledJSError
     );
     if (ctx == NULL) {
         return;

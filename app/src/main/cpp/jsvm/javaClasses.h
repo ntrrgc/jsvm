@@ -22,6 +22,9 @@ namespace jsvm {
 
     extern jclass       JSRuntimeException_Class;
 
+    extern jclass       JSError_Class;
+    extern jmethodID    JSError_ctor;
+
     extern jclass       IllegalArgumentException_Class;
 
     extern jclass       AttemptedToUseObjectFromOtherVM_Class;

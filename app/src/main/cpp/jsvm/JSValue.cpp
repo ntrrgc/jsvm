@@ -15,6 +15,12 @@ using namespace jsvm;
 #define JSVALUE_TYPE_STRING 5
 #define JSVALUE_TYPE_OBJECT 6
 
+/**
+ * Retrieve the top of the stack and wrap it into a JSValue.
+ *
+ * May throw if the stack top contains a corrupted string
+ * (corrupted strings can only be created in C++ code).
+ */
 Result<JSValue>
 jsvm::JSValue_createFromStackTop(JNIEnv *env, JSVM jsVM) {
     JSVMPriv *priv = JSVM_getPriv(env, jsVM);

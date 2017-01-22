@@ -26,7 +26,7 @@ public class JSVM {
     /**
      * Native (duk_context *)
      */
-    /* package */ long hPriv;
+    private long hPriv;
 
     /**
      * Synchronization monitor used so that two threads never
