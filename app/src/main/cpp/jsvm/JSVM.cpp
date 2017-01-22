@@ -82,6 +82,29 @@ release:
     return ret;
 }
 
+
+JNIEXPORT int JNICALL
+Java_me_ntrrgc_jsvm_JSVM_getStackFrameSizeNative(JNIEnv *env, jobject instance) {
+
+    JSVM jsVM = (JSVM) instance;
+    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    duk_context* ctx = priv->ctx;
+
+    return (int) duk_get_top(ctx);
+
+}
+
+JNIEXPORT int JNICALL
+Java_me_ntrrgc_jsvm_JSVM_getStackSizeNative(JNIEnv *env, jobject instance) {
+
+    JSVM jsVM = (JSVM) instance;
+    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    duk_context* ctx = priv->ctx;
+
+    return (int) duk_get_top_index(ctx);
+
+}
+
 }
 
 static void

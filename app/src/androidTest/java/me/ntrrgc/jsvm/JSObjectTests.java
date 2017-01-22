@@ -24,10 +24,12 @@ public class JSObjectTests {
     @Before
     public void setUp() {
         jsvm = new JSVM();
+        assertEquals(0, jsvm.getStackSize());
     }
 
     @After
     public void tearDown() {
+        assertEquals(0, jsvm.getStackSize());
     }
 
     @Test

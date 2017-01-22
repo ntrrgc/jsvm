@@ -12,18 +12,19 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
 public class ExceptionTests {
-    private JSVM jsVM;
+    private JSVM jsvm;
 
     @Before
     public void setUp() {
-        jsVM = new JSVM();
+        jsvm = new JSVM();
+        assertEquals(0, jsvm.getStackSize());
     }
 
     @Test
     public void testUnhandledErrorsThrow() throws Exception {
         boolean threw = false;
         try {
-            jsVM.evaluateScript("throw new Error('oops!');");
+            jsvm.evaluateScript("throw new Error('oops!');");
         } catch (JSError error) {
             threw = true;
 

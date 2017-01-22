@@ -26,19 +26,12 @@ public class JSValueTests {
     @Before
     public void setUp() {
         jsvm = new JSVM();
+        assertEquals(0, jsvm.getStackSize());
     }
 
     @After
     public void tearDown() {
-    }
-
-    @Test
-    public void useAppContext() throws Exception {
-        // Context of the app under test.
-        Context appContext = InstrumentationRegistry.getTargetContext();
-
-        assertEquals("me.ntrrgc.jsvm", appContext.getPackageName());
-        assertEquals("Hello from C++, again", JSVM.stringFromJNI());
+        assertEquals(0, jsvm.getStackSize());
     }
 
     @Test

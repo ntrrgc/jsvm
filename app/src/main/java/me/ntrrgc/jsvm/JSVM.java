@@ -34,11 +34,7 @@ public class JSVM {
      */
     /* package */ final Object lock = new Object();
 
-    /**
-     * A native method that is implemented by the 'native-lib' native library,
-     * which is packaged with this application.
-     */
-    public static native String stringFromJNI();
+    // Dummy method used in some performance tests to measure JNI overhead.
     public static native double returnADouble();
 
     private native void nativeInit();
@@ -61,6 +57,19 @@ public class JSVM {
             finalized = true;
         }
     }
-
     private native void finalizeNative();
+
+    public int getStackFrameSize() {
+        synchronized (this.lock) {
+            return this.getStackFrameSizeNative();
+        }
+    }
+    private native int getStackFrameSizeNative();
+
+    public int getStackSize() {
+        synchronized (this.lock) {
+            return this.getStackSizeNative();
+        }
+    }
+    private native int getStackSizeNative();
 }

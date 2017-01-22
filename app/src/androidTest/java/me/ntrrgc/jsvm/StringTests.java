@@ -32,10 +32,12 @@ public class StringTests {
                 "string: '', " +
                 "get length() { return this.string.length; }" +
                 "}; tester").asObject();
+        assertEquals(0, jsvm.getStackSize());
     }
 
     @After
     public void tearDown() {
+        assertEquals(0, jsvm.getStackSize());
     }
 
     @Test
