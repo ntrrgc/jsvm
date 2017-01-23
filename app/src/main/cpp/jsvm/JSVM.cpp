@@ -4,6 +4,7 @@
 
 #include <jsvm/JSVM.h>
 #include "JSValue.h"
+#include "invokeSafe.h"
 #include <functional>
 
 using namespace jsvm;
@@ -17,59 +18,6 @@ jsvm::JSVM_getPriv(JNIEnv *env, JSVM jsVM) {
     JSVMPriv* priv = (JSVMPriv *) env->GetLongField(jsVM, JSVM_hPriv);
     priv->load(env, jsVM);
     return priv;
-}
-
-typedef std::function<duk_ret_t(duk_context*)> duk_safe_call_std_function;
-
-static duk_ret_t
-duk_raw_function_call(duk_context *ctx, void *udata) {
-    duk_safe_call_std_function * function = (duk_safe_call_std_function *) udata;
-    return (*function)(ctx);
-}
-
-template<typename T>
-T
-JSVMPriv_invokeSafe(JSVMPriv *priv, std::function<T(duk_context*)> callback) {
-    // T has to be an assignable, concrete type (usually a pointer to a Java object)
-    T ret;
-    // Exceptions may be anything, so we have to use pointers to ensure virtual dispatch.
-    std::unique_ptr<JavaException> capturedJavaException;
-
-    duk_safe_call_std_function wrappedCallback = [&ret, &callback, &capturedJavaException](duk_context *ctx) {
-        try {
-            ret = std::move(callback(ctx));
-        } catch (JavaException& javaException) {
-            capturedJavaException = javaException.moveClone();
-        }
-        return 0;
-    };
-
-    int dukExecRet = duk_safe_call(priv->ctx, duk_raw_function_call, &wrappedCallback, 0, 1);
-
-    if (capturedJavaException) {
-        // A wrapped Java exception has been throw in C++, but not propagated yet to Java!
-        // Propagate it now:
-        JNIEnv* env = priv->env;
-        jsvm_assert(env->ExceptionCheck() == JNI_FALSE);
-        capturedJavaException->propagateToJava(env);
-
-        duk_pop(priv->ctx);
-        return NULL;
-    } else if (dukExecRet == DUK_EXEC_ERROR) {
-        // A JavaScript error has been thrown, wrap into a JSError class
-        // and propagate it to Java.
-        JNIEnv* env = priv->env;
-        jsvm_assert(env->ExceptionCheck() == JNI_FALSE);
-        JSError(env, JSValue_createFromStack(env, priv->jsVM, -1)).propagateToJava(env);
-
-        duk_pop(priv->ctx);
-        return NULL;
-    } else {
-        // Successful execution. Return the return value of the provided callback.
-
-        duk_pop(priv->ctx);
-        return ret;
-    }
 }
 
 extern "C" {

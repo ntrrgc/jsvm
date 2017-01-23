@@ -23,7 +23,6 @@ public class ExceptionTests {
 
     @After
     public void tearDown() {
-        assertEquals(0, jsvm.getStackSize());
     }
 
     @Test
@@ -33,10 +32,14 @@ public class ExceptionTests {
             jsvm.evaluateScript("throw new Error('oops!');");
         } catch (JSError error) {
             threw = true;
+            assertEquals(0, jsvm.getStackSize());
 
             JSObject errorObject = error.getErrorValue().asObject();
+            assertEquals(0, jsvm.getStackSize());
             assertNotNull(errorObject);
+
             assertEquals("oops!", errorObject.get("message").asString());
+            assertEquals(0, jsvm.getStackSize());
 
             assertEquals("oops!", error.getMessage());
         }
@@ -50,10 +53,12 @@ public class ExceptionTests {
             jsvm.evaluateScript("function hello() { throw new Error('oops!'); } hello();");
         } catch (JSError error) {
             threw = true;
+            assertEquals(0, jsvm.getStackSize());
 
             JSObject errorObject = error.getErrorValue().asObject();
             assertNotNull(errorObject);
             assertEquals("oops!", errorObject.get("message").asString());
+            assertEquals(0, jsvm.getStackSize());
 
             assertEquals("oops!", error.getMessage());
         }

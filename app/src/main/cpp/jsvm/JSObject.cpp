@@ -4,6 +4,7 @@
 
 #include "JSObject.h"
 #include "JSValue.h"
+#include "invokeSafe.h"
 
 using namespace jsvm;
 
@@ -76,20 +77,23 @@ Java_me_ntrrgc_jsvm_JSObject_getByKeyNative(JNIEnv *env, jobject instance, jobje
                                             jstring key) {
     JSVM jsVM = (JSVM) jsVM_;
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
-    duk_context* ctx = priv->ctx;
 
-    // Retrieve the object
-    priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
+    return JSVMPriv_invokeSafe<JSValue>(priv, [priv, env, jsVM, key, handle](duk_context *ctx) {
+        // Retrieve the object
+        priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
 
-    // Fetch property
-    String_pushJString(env, key, ctx);
-    duk_get_prop(ctx, -2);
+        // Fetch property
+        String_pushJString(env, key, ctx);
+        duk_get_prop(ctx, -2);
 
-    // Wrap in JSValue
-    return JSValue_createFromStack(env, jsVM, -1);
+        // Wrap in JSValue
+        JSValue ret = JSValue_createFromStack(env, jsVM, -1);
 
-    // Restore stack
-    duk_pop_2(ctx);
+        // Restore stack
+        duk_pop_2(ctx);
+
+        return ret;
+    });
 }
 
 
@@ -99,19 +103,22 @@ Java_me_ntrrgc_jsvm_JSObject_getByIndexNative(JNIEnv *env, jobject instance, job
 
     JSVM jsVM = (JSVM) jsVM_;
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
-    duk_context* ctx = priv->ctx;
 
-    // Retrieve the object
-    priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
+    return JSVMPriv_invokeSafe<JSValue>(priv, [priv, env, jsVM, index, handle](duk_context *ctx) {
+        // Retrieve the object
+        priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
 
-    // Fetch property
-    duk_get_prop_index(ctx, -1, (duk_uarridx_t) index);
+        // Fetch property
+        duk_get_prop_index(ctx, -1, (duk_uarridx_t) index);
 
-    // Wrap in JSValue
-    return JSValue_createFromStack(env, jsVM, -1);
+        // Wrap in JSValue
+        JSValue ret = JSValue_createFromStack(env, jsVM, -1);
 
-    // Restore stack
-    duk_pop_2(ctx);
+        // Restore stack
+        duk_pop_2(ctx);
+
+        return ret;
+    });
 }
 
 JNIEXPORT void JNICALL

@@ -17,7 +17,7 @@ SET( CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--gc-sections 
 add_definitions(-DENABLE_EMBEDDED_NULL_INTEROP)
 SET(CMAKE_VERBOSE_MAKEFILE "ON")
 
-set_source_files_properties(src/main/cpp/duktape/duktape.c PROPERTIES LANGUAGE CXX)
+# set_source_files_properties(src/main/cpp/duktape/duktape.c PROPERTIES LANGUAGE CXX)
 
 add_library( # Sets the name of the library.
              native-lib
@@ -46,6 +46,8 @@ add_library( # Sets the name of the library.
              src/main/cpp/jsvm/JSObject.cpp
              src/main/cpp/jsvm/utils.h
              src/main/cpp/jsvm/utils.cpp
+             src/main/cpp/jsvm/invokeSafe.h
+             src/main/cpp/jsvm/invokeSafe.cpp
              )
 
  include_directories(src/main/cpp)
