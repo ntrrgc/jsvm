@@ -13,7 +13,7 @@ import me.ntrrgc.jsvm.performanceTests.controlGroup.DummyPOJO;
 
 public class PerformanceTests {
     private JSObject createDummyJSObject(JSVM jsVM, double value) {
-        JSObject object = jsVM.evaluateScript("({0: 1})").asObject();
+        JSObject object = jsVM.evaluateScript("({0: 1})").asObjectOrNull();
         assert object != null;
         object.set(0, JSValue.aNumber(value));
         return object;
@@ -93,7 +93,7 @@ public class PerformanceTests {
 
         start = System.currentTimeMillis();
         for (i = 0; i < iterations; i++) {
-            tmp = tmp * jsObjects[(int) (i % 5)].get(0).asDouble();
+            tmp = tmp * jsObjects[(int) (i % 5)].get(0).asDoubleOrNull();
         }
         final long timeJSObjects = System.currentTimeMillis() - start;
         log.append("Time JS Objects: " + timeJSObjects + ".\n");

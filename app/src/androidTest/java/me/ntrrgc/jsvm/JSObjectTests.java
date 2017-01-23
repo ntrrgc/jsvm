@@ -1,9 +1,6 @@
 package me.ntrrgc.jsvm;
 
-import android.content.Context;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
-import android.util.Log;
 
 import org.junit.After;
 import org.junit.Before;
@@ -34,7 +31,7 @@ public class JSObjectTests {
 
     @Test
     public void testReadProperties() throws Exception {
-        JSObject obj = jsvm.evaluateScript("({x: 5, 1: 'one'})").asObject();
+        JSObject obj = jsvm.evaluateScript("({x: 5, 1: 'one'})").asObjectOrNull();
         assertNotNull(obj);
 
         assertTrue(obj.contains("x"));
@@ -42,15 +39,15 @@ public class JSObjectTests {
         assertFalse(obj.contains("y"));
         assertFalse(obj.contains(0));
 
-        assertEquals(5, obj.get("x").asInt().intValue());
-        assertEquals("one", obj.get(1).asString());
+        assertEquals(5, obj.get("x").asIntOrNull().intValue());
+        assertEquals("one", obj.get(1).asStringOrNull());
         assertTrue(obj.get("y").isUndefined());
         assertTrue(obj.get(0).isUndefined());
     }
 
     @Test
     public void testWriteProperties() throws Exception {
-        JSObject obj = jsvm.evaluateScript("({})").asObject();
+        JSObject obj = jsvm.evaluateScript("({})").asObjectOrNull();
         assertNotNull(obj);
 
         obj.set("x", JSValue.aNumber(5));
@@ -61,33 +58,33 @@ public class JSObjectTests {
         assertFalse(obj.contains("y"));
         assertFalse(obj.contains(0));
 
-        assertEquals(5, obj.get("x").asInt().intValue());
-        assertEquals("one", obj.get(1).asString());
+        assertEquals(5, obj.get("x").asIntOrNull().intValue());
+        assertEquals("one", obj.get(1).asStringOrNull());
         assertTrue(obj.get("y").isUndefined());
         assertTrue(obj.get(0).isUndefined());
     }
 
     @Test
     public void testWriteNestedObjects() throws Exception {
-        JSObject nodeA = jsvm.evaluateScript("({value: 0, next: null})").asObject();
+        JSObject nodeA = jsvm.evaluateScript("({value: 0, next: null})").asObjectOrNull();
         assertNotNull(nodeA);
-        JSObject nodeB = jsvm.evaluateScript("({value: 1, next: null})").asObject();
+        JSObject nodeB = jsvm.evaluateScript("({value: 1, next: null})").asObjectOrNull();
         assertNotNull(nodeB);
 
         nodeA.set("next", JSValue.anObject(nodeB));
-        assertEquals(1, nodeA.get("next").asObject().get("value").asInt().intValue());
+        assertEquals(1, nodeA.get("next").asObjectOrNull().get("value").asIntOrNull().intValue());
 
         nodeB.set("value", JSValue.aNumber(2));
-        assertEquals(2, nodeA.get("next").asObject().get("value").asInt().intValue());
+        assertEquals(2, nodeA.get("next").asObjectOrNull().get("value").asIntOrNull().intValue());
     }
 
     @Test
     public void crossingVMsThrows() throws Exception {
-        JSObject obj = jsvm.evaluateScript("({})").asObject();
+        JSObject obj = jsvm.evaluateScript("({})").asObjectOrNull();
         assertNotNull(obj);
 
         JSVM anotherVM = new JSVM();
-        JSObject foreignThingy = anotherVM.evaluateScript("({})").asObject();
+        JSObject foreignThingy = anotherVM.evaluateScript("({})").asObjectOrNull();
         assertNotNull(foreignThingy);
 
         boolean caught = false;
@@ -103,9 +100,9 @@ public class JSObjectTests {
 
     @Test
     public void functionsAreObjects() throws Exception {
-        JSObject fun = jsvm.evaluateScript("(function hello() { return 'Hi'; })").asObject();
+        JSObject fun = jsvm.evaluateScript("(function hello() { return 'Hi'; })").asObjectOrNull();
         assertNotNull(fun);
 
-        assertEquals("hello", fun.get("name").asString());
+        assertEquals("hello", fun.get("name").asStringOrNull());
     }
 }

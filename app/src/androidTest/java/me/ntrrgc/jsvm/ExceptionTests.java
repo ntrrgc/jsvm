@@ -34,11 +34,11 @@ public class ExceptionTests {
             threw = true;
             assertEquals(0, jsvm.getStackSize());
 
-            JSObject errorObject = error.getErrorValue().asObject();
+            JSObject errorObject = error.getErrorValue().asObjectOrNull();
             assertEquals(0, jsvm.getStackSize());
             assertNotNull(errorObject);
 
-            assertEquals("oops!", errorObject.get("message").asString());
+            assertEquals("oops!", errorObject.get("message").asStringOrNull());
             assertEquals(0, jsvm.getStackSize());
 
             assertEquals("oops!", error.getMessage());
@@ -55,9 +55,9 @@ public class ExceptionTests {
             threw = true;
             assertEquals(0, jsvm.getStackSize());
 
-            JSObject errorObject = error.getErrorValue().asObject();
+            JSObject errorObject = error.getErrorValue().asObjectOrNull();
             assertNotNull(errorObject);
-            assertEquals("oops!", errorObject.get("message").asString());
+            assertEquals("oops!", errorObject.get("message").asStringOrNull());
             assertEquals(0, jsvm.getStackSize());
 
             assertEquals("oops!", error.getMessage());

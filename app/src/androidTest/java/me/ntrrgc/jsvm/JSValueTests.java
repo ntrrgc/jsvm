@@ -1,7 +1,5 @@
 package me.ntrrgc.jsvm;
 
-import android.content.Context;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.After;
@@ -37,30 +35,30 @@ public class JSValueTests {
     @Test
     public void evalSimpleScript() throws Exception {
         JSVM jsvm = new JSVM();
-        assertEquals("hello world", jsvm.evaluateScript("'hello ' + 'world'").asString());
+        assertEquals("hello world", jsvm.evaluateScript("'hello ' + 'world'").asStringOrNull());
     }
 
     @Test
     public void testInteger() throws Exception {
         JSValue result = jsvm.evaluateScript("1 + 2");
         assertTrue(result.isNumber());
-        assertEquals(3, result.asInt().intValue());
-        assertEquals(3.0, result.asDouble().doubleValue(), 0.0);
-        assertEquals(3L, result.asLong().longValue());
-        assertEquals("3", result.asString());
-        assertNull(result.asObject());
-        assertNull(result.asBoolean());
+        assertEquals(3, result.asIntOrNull().intValue());
+        assertEquals(3.0, result.asDoubleOrNull().doubleValue(), 0.0);
+        assertEquals(3L, result.asLongOrNull().longValue());
+        assertEquals("3", result.asStringOrNull());
+        assertNull(result.asObjectOrNull());
+        assertNull(result.asBooleanOrNull());
     }
 
     @Test
     public void testFractionalNumber() throws Exception {
         JSValue result = jsvm.evaluateScript("9 / 10");
         assertTrue(result.isNumber());
-        assertEquals(0, result.asInt().intValue());
-        assertEquals(0.9, result.asDouble().doubleValue(), 0.0);
-        assertEquals("0.9", result.asString());
-        assertNull(result.asObject());
-        assertNull(result.asBoolean());
+        assertEquals(0, result.asIntOrNull().intValue());
+        assertEquals(0.9, result.asDoubleOrNull().doubleValue(), 0.0);
+        assertEquals("0.9", result.asStringOrNull());
+        assertNull(result.asObjectOrNull());
+        assertNull(result.asBooleanOrNull());
     }
 
     @Test
@@ -76,11 +74,11 @@ public class JSValueTests {
     public void testBoolean() throws Exception {
         JSValue result = jsvm.evaluateScript("9 < 10");
         assertTrue(result.isBoolean());
-        assertTrue(result.asBoolean());
+        assertTrue(result.asBooleanOrNull());
 
-        assertFalse(jsvm.evaluateScript("9 > 10").asBoolean());
+        assertFalse(jsvm.evaluateScript("9 > 10").asBooleanOrNull());
 
-        assertNull(jsvm.evaluateScript("10 - 9").asBoolean());
+        assertNull(jsvm.evaluateScript("10 - 9").asBooleanOrNull());
     }
 
     @Test
@@ -93,6 +91,6 @@ public class JSValueTests {
         assertFalse(result.isUnsupported());
 
         assertTrue(result.isObject());
-        assertEquals("I am the number 3", result.asObject().toString());
+        assertEquals("I am the number 3", result.asObjectOrNull().toString());
     }
 }

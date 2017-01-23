@@ -1,7 +1,5 @@
 package me.ntrrgc.jsvm;
 
-import android.content.Context;
-import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.After;
@@ -10,10 +8,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Instrumentation test, which will execute on an Android device.
@@ -43,7 +37,7 @@ public class StringTests {
     @Test
     public void testTester() throws Exception {
         tester.set("string", JSValue.aString("hello"));
-        assertEquals(5, tester.get("length").asInt().intValue());
+        assertEquals(5, tester.get("length").asInt());
     }
 
     @Test
@@ -55,7 +49,7 @@ public class StringTests {
     public void testSnowmanToJS() throws Exception {
         tester.set("string", JSValue.aString("☃"));
         assertEquals("☃", tester.get("string").asString());
-        assertEquals(1, tester.get("length").asInt().intValue());
+        assertEquals(1, tester.get("length").asInt());
     }
 
     @Test
@@ -70,13 +64,12 @@ public class StringTests {
 
     @Test
     public void testCatGrinningInJS() throws Exception {
-        assertEquals(2, jsvm.evaluateScript("('\\uD83D\\uDE3A').length").asInt().intValue());
+        assertEquals(2, jsvm.evaluateScript("('\\uD83D\\uDE3A').length").asInt());
     }
 
     @Test
     public void testCatGrinningAsObjectKeyFromJS() throws Exception {
         JSObject obj = jsvm.evaluateScript("({'\\uD83D\\uDE3A': 'value'})").asObject();
-        assertNotNull(obj);
         assertEquals("value", obj.get("\uD83D\uDE3A").asString());
     }
 
@@ -90,7 +83,6 @@ public class StringTests {
     @Test
     public void testEmbeddedNullsInObjectKeyFromJS() throws Exception {
         JSObject obj = jsvm.evaluateScript("({'a\\u0000b': 'value'})").asObject();
-        assertNotNull(obj);
         assertEquals("value", obj.get("a\u0000b").asString());
     }
 
@@ -105,7 +97,7 @@ public class StringTests {
     public void testCatGrinningToJS() throws Exception {
         tester.set("string", JSValue.aString("\uD83D\uDE3A"));
         assertEquals("\uD83D\uDE3A", tester.get("string").asString());
-        assertEquals(2, tester.get("length").asInt().intValue());
+        assertEquals(2, tester.get("length").asInt());
     }
 
     @Test
@@ -117,6 +109,6 @@ public class StringTests {
     public void testEmbeddedNullsToJS() throws Exception {
         tester.set("string", JSValue.aString("a\u0000b"));
         assertEquals("a\u0000b", tester.get("string").asString());
-        assertEquals(3, tester.get("length").asInt().intValue());
+        assertEquals(3, tester.get("length").asInt());
     }
 }

@@ -1,13 +1,15 @@
 package me.ntrrgc.jsvm;
 
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
+ * A variant type class that wraps any value that can be received or sent  to the JS VM.
+ *
  * Created by ntrrgc on 1/14/17.
  */
-
-final public class JSValue {
+public final class JSValue {
     private int type;
     private Object value;
 
@@ -25,43 +27,66 @@ final public class JSValue {
     private static final int TYPE_OBJECT = 6;
 
     @Contract(pure = true)
-    public boolean isUnsupported() {
+    public final boolean isUnsupported() {
         return type == TYPE_UNSUPPORTED;
     }
 
     @Contract(pure = true)
-    public boolean isUndefined() {
+    public final boolean isUndefined() {
         return type == TYPE_UNDEFINED;
     }
 
     @Contract(pure = true)
-    public boolean isNull() {
+    public final boolean isNull() {
         return type == TYPE_NULL;
     }
 
     @Contract(pure = true)
-    public boolean isBoolean() {
+    public final boolean isBoolean() {
         return type == TYPE_BOOLEAN;
     }
 
     @Contract(pure = true)
-    public boolean isNumber() {
+    public final boolean isNumber() {
         return type == TYPE_NUMBER;
     }
 
     @Contract(pure = true)
-    public boolean isString() {
+    public final boolean isString() {
         return type == TYPE_STRING;
     }
 
     @Contract(pure = true)
-    public boolean isObject() {
+    public final boolean isObject() {
         return type == TYPE_OBJECT;
+    }
+
+    @NotNull
+    @Contract(pure = true)
+    private static String getTypeAsString(int type) {
+        switch (type) {
+            case TYPE_UNDEFINED:
+                return "undefined";
+            case TYPE_NULL:
+                return "null";
+            case TYPE_BOOLEAN:
+                return "boolean";
+            case TYPE_NUMBER:
+                return "number";
+            case TYPE_STRING:
+                return "string";
+            case TYPE_OBJECT:
+                return "object";
+            case TYPE_UNSUPPORTED:
+                return "<unsupported type>";
+            default:
+                throw new RuntimeException("Unknown type");
+        }
     }
 
     @Nullable
     @Contract(pure = true)
-    public Boolean asBoolean() {
+    public final Boolean asBooleanOrNull() {
         if (isBoolean()) {
             return (Boolean) value;
         } else {
@@ -71,7 +96,7 @@ final public class JSValue {
 
     @Nullable
     @Contract(pure = true)
-    public Double asDouble() {
+    public final Double asDoubleOrNull() {
         if (isNumber()) {
             return (Double) value;
         } else {
@@ -80,7 +105,8 @@ final public class JSValue {
     }
 
     @Nullable
-    public Integer asInt() {
+    @Contract(pure = true)
+    public final Integer asIntOrNull() {
         if (isNumber()) {
             return ((Double) value).intValue();
         } else {
@@ -89,7 +115,8 @@ final public class JSValue {
     }
 
     @Nullable
-    public Long asLong() {
+    @Contract(pure = true)
+    public final Long asLongOrNull() {
         if (isNumber()) {
             return ((Double) value).longValue();
         } else {
@@ -98,7 +125,8 @@ final public class JSValue {
     }
 
     @Nullable
-    public String asString() {
+    @Contract(pure = true)
+    public final String asStringOrNull() {
         if (isString()) {
             return (String) value;
         } else if (isNumber()) {
@@ -121,7 +149,7 @@ final public class JSValue {
 
     @Nullable
     @Contract(pure = true)
-    public JSObject asObject() {
+    public final JSObject asObjectOrNull() {
         if (isObject()) {
             return (JSObject) value;
         } else {
@@ -129,38 +157,99 @@ final public class JSValue {
         }
     }
 
-    @Contract(" -> !null")
-    public static JSValue aNull() {
+    @Contract(pure = true)
+    public final boolean asBoolean() {
+        Boolean value = this.asBooleanOrNull();
+        if (value != null) {
+            return value;
+        } else {
+            throw new InvalidJSValueType(getTypeAsString(TYPE_BOOLEAN), getTypeAsString(type), this);
+        }
+    }
+
+    @Contract(pure = true)
+    public final double asDouble() {
+        Double value = this.asDoubleOrNull();
+        if (value != null) {
+            return value;
+        } else {
+            throw new InvalidJSValueType(getTypeAsString(TYPE_NUMBER), getTypeAsString(type), this);
+        }
+    }
+
+    @Contract(pure = true)
+    public final int asInt() {
+        Integer value = this.asIntOrNull();
+        if (value != null) {
+            return value;
+        } else {
+            throw new InvalidJSValueType(getTypeAsString(TYPE_NUMBER), getTypeAsString(type), this);
+        }
+    }
+
+    @Contract(pure = true)
+    public final long asLong() {
+        Long value = this.asLongOrNull();
+        if (value != null) {
+            return value;
+        } else {
+            throw new InvalidJSValueType(getTypeAsString(TYPE_NUMBER), getTypeAsString(type), this);
+        }
+    }
+
+    @NotNull
+    @Contract(pure = true)
+    public final String asString() {
+        String value = this.asStringOrNull();
+        if (value != null) {
+            return value;
+        } else {
+            throw new InvalidJSValueType(getTypeAsString(TYPE_STRING), getTypeAsString(type), this);
+        }
+    }
+
+    @NotNull
+    @Contract(pure = true)
+    public final JSObject asObject() {
+        if (isObject()) {
+            return (JSObject) value;
+        } else {
+            throw new InvalidJSValueType(getTypeAsString(TYPE_OBJECT), getTypeAsString(type), this);
+        }
+    }
+
+    @NotNull
+    public final static JSValue aNull() {
         return new JSValue(TYPE_NULL, null);
     }
 
-    @Contract(" -> !null")
-    public static JSValue anUndefined() {
+    @NotNull
+    public final static JSValue anUndefined() {
         return new JSValue(TYPE_UNDEFINED, null);
     }
 
-    @Contract("_ -> !null")
-    public static JSValue aBoolean(boolean value) {
+    @NotNull
+    public final static JSValue aBoolean(boolean value) {
         return new JSValue(TYPE_BOOLEAN, value);
     }
 
-    @Contract("_ -> !null")
-    public static JSValue aNumber(double value) {
+    @NotNull
+    public final static JSValue aNumber(double value) {
         return new JSValue(TYPE_NUMBER, value);
     }
 
-    @Contract("_ -> !null")
-    public static JSValue aString(String value) {
+    @NotNull
+    public final static JSValue aString(@NotNull String value) {
         return new JSValue(TYPE_STRING, value);
     }
 
-    @Contract("_ -> !null")
-    public static JSValue anObject(JSObject value) {
+    @NotNull
+    public final static JSValue anObject(@NotNull JSObject value) {
         return new JSValue(TYPE_OBJECT, value);
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public final boolean equals(Object obj) {
         if (obj instanceof JSValue) {
             JSValue other = (JSValue) obj;
             return other.type == type && other.value == value;
@@ -170,12 +259,13 @@ final public class JSValue {
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return this.type ^ this.value.hashCode();
     }
 
     @Override
-    public String toString() {
+    @NotNull
+    public final String toString() {
         switch (type) {
             case TYPE_UNDEFINED:
                 return "undefined";
@@ -185,7 +275,7 @@ final public class JSValue {
             case TYPE_NUMBER:
             case TYPE_STRING:
             case TYPE_OBJECT:
-                return asString();
+                return asStringOrNull();
             case TYPE_UNSUPPORTED:
                 return "<unsupported type>";
             default:

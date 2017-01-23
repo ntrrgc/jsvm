@@ -22,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
 //        JSVM jsvm = new JSVM();
 //        JSValue v = jsvm.evaluateScript("'Hello from' + ' JS'");
 //        Log.i("OKA", String.valueOf(v.jsVM == jsvm));
-//        tv.setText(v.asString());
+//        tv.setText(v.asStringOrNull());
 
 //
 //        String bluebird = null;

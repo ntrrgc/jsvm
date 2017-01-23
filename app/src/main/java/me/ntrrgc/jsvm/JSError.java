@@ -32,7 +32,7 @@ public final class JSError extends RuntimeException {
 
     @NotNull
     private static String extractErrorMessage(@NotNull JSValue jsError) {
-        JSObject jsErrorObject = jsError.asObject();
+        JSObject jsErrorObject = jsError.asObjectOrNull();
         if (jsErrorObject != null) {
             return jsErrorObject.get("message").toString();
         } else {
