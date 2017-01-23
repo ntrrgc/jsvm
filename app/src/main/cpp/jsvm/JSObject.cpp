@@ -46,18 +46,21 @@ Java_me_ntrrgc_jsvm_JSObject_toStringNative(JNIEnv *env, jobject instance, jobje
 
     JSVM jsVM = (JSVM) jsVM_;
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
-    duk_context* ctx = priv->ctx;
 
-    // Retrieve the object
-    priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
+    return JSVMPriv_invokeSafe<jstring>(priv, [priv, env, jsVM, handle] (duk_context *ctx) {
 
-    // Read as string
-    jstring ret = env->NewStringUTF(duk_to_string(ctx, -1));
+        // Retrieve the object
+        priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
 
-    // Restore the stack
-    duk_pop(ctx);
+        // Read as string
+        jstring ret = env->NewStringUTF(duk_to_string(ctx, -1));
 
-    return ret;
+        // Restore the stack
+        duk_pop(ctx);
+
+        return ret;
+
+    });
 }
 
 JNIEXPORT void JNICALL
@@ -78,7 +81,8 @@ Java_me_ntrrgc_jsvm_JSObject_getByKeyNative(JNIEnv *env, jobject instance, jobje
     JSVM jsVM = (JSVM) jsVM_;
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
 
-    return JSVMPriv_invokeSafe<JSValue>(priv, [priv, env, jsVM, key, handle](duk_context *ctx) {
+    return JSVMPriv_invokeSafe<JSValue>(priv, [priv, env, jsVM, key, handle] (duk_context *ctx) {
+
         // Retrieve the object
         priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
 
@@ -93,6 +97,7 @@ Java_me_ntrrgc_jsvm_JSObject_getByKeyNative(JNIEnv *env, jobject instance, jobje
         duk_pop_2(ctx);
 
         return ret;
+
     });
 }
 
@@ -104,7 +109,8 @@ Java_me_ntrrgc_jsvm_JSObject_getByIndexNative(JNIEnv *env, jobject instance, job
     JSVM jsVM = (JSVM) jsVM_;
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
 
-    return JSVMPriv_invokeSafe<JSValue>(priv, [priv, env, jsVM, index, handle](duk_context *ctx) {
+    return JSVMPriv_invokeSafe<JSValue>(priv, [priv, env, jsVM, index, handle] (duk_context *ctx) {
+
         // Retrieve the object
         priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
 
@@ -118,6 +124,7 @@ Java_me_ntrrgc_jsvm_JSObject_getByIndexNative(JNIEnv *env, jobject instance, job
         duk_pop_2(ctx);
 
         return ret;
+
     });
 }
 
@@ -126,18 +133,21 @@ Java_me_ntrrgc_jsvm_JSObject_setByKeyNative(JNIEnv *env, jobject instance, jobje
                                             jint handle, jstring key, jobject value) {
     JSVM jsVM = (JSVM) jsVM_;
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
-    duk_context* ctx = priv->ctx;
 
-    // Retrieve the object
-    priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
+    return JSVMPriv_invokeSafeVoid(priv, [priv, env, jsVM, key, handle, value] (duk_context *ctx) {
 
-    // Set property
-    String_pushJString(env, key, ctx);
-    JSValue_push(env, (JSValue) value, ctx);
-    duk_put_prop(ctx, -3);
+        // Retrieve the object
+        priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
 
-    // Restore stack
-    duk_pop(ctx); // objectBook
+        // Set property
+        String_pushJString(env, key, ctx);
+        JSValue_push(env, (JSValue) value, ctx);
+        duk_put_prop(ctx, -3);
+
+        // Restore stack
+        duk_pop(ctx); // objectBook
+
+    });
 }
 
 JNIEXPORT void JNICALL
@@ -146,17 +156,20 @@ Java_me_ntrrgc_jsvm_JSObject_setByIndexNative(JNIEnv *env, jobject instance, job
 
     JSVM jsVM = (JSVM) jsVM_;
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
-    duk_context* ctx = priv->ctx;
 
-    // Retrieve the object
-    priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
+    return JSVMPriv_invokeSafeVoid(priv, [priv, env, jsVM, index, handle, value] (duk_context *ctx) {
 
-    // Set property
-    JSValue_push(env, (JSValue) value, ctx);
-    duk_put_prop_index(ctx, -2, (duk_uarridx_t) index);
+        // Retrieve the object
+        priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
 
-    // Restore stack
-    duk_pop(ctx); // objectBook
+        // Set property
+        JSValue_push(env, (JSValue) value, ctx);
+        duk_put_prop_index(ctx, -2, (duk_uarridx_t) index);
+
+        // Restore stack
+        duk_pop(ctx); // objectBook
+
+    });
 }
 
 JNIEXPORT jboolean JNICALL
@@ -164,21 +177,23 @@ Java_me_ntrrgc_jsvm_JSObject_containsByKeyNative(JNIEnv *env, jobject instance, 
                                                  jint handle, jstring key) {
     JSVM jsVM = (JSVM) jsVM_;
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
-    duk_context* ctx = priv->ctx;
 
-    // Retrieve the object
-    priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
+    return JSVMPriv_invokeSafe<jboolean>(priv, [priv, env, jsVM, key, handle] (duk_context *ctx) {
 
-    // Search property
-    String_pushJString(env, key, ctx);
-    jboolean ret = (jboolean) duk_has_prop(ctx, -2);
+        // Retrieve the object
+        priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
 
-    // Restore stack
-    duk_pop(ctx); // objectBook
+        // Search property
+        String_pushJString(env, key, ctx);
+        jboolean ret = (jboolean) duk_has_prop(ctx, -2);
 
-    return ret;
+        // Restore stack
+        duk_pop(ctx); // objectBook
+
+        return ret;
+
+    });
 }
-
 
 JNIEXPORT jboolean JNICALL
 Java_me_ntrrgc_jsvm_JSObject_containsByIndexNative(JNIEnv *env, jobject instance, jobject jsVM_,
@@ -186,18 +201,21 @@ Java_me_ntrrgc_jsvm_JSObject_containsByIndexNative(JNIEnv *env, jobject instance
 
     JSVM jsVM = (JSVM) jsVM_;
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
-    duk_context* ctx = priv->ctx;
 
-    // Retrieve the object
-    priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
+    return JSVMPriv_invokeSafe<jboolean>(priv, [priv, env, jsVM, index, handle] (duk_context *ctx) {
 
-    // Search property
-    jboolean ret = (jboolean) duk_has_prop_index(ctx, -1, index);
+        // Retrieve the object
+        priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
 
-    // Restore stack
-    duk_pop(ctx); // objectBook
+        // Search property
+        jboolean ret = (jboolean) duk_has_prop_index(ctx, -1, (duk_uarridx_t) index);
 
-    return ret;
+        // Restore stack
+        duk_pop(ctx); // objectBook
+
+        return ret;
+
+    });
 }
 
 }

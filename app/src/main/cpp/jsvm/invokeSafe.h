@@ -8,6 +8,7 @@
 #include <stdafx.h>
 #include <jsvm/JSVM.h>
 #include <jsvm/JSValue.h>
+#include <type_traits>
 
 namespace jsvm {
 
@@ -15,6 +16,8 @@ namespace jsvm {
 
     duk_ret_t
     _duk_raw_function_call(duk_context *ctx, void *udata);
+
+    void JSVMPriv_invokeSafeVoid(JSVMPriv *priv, std::function<void(duk_context *)> callback);
 
     template<typename T>
     T
@@ -29,7 +32,7 @@ namespace jsvm {
         duk_safe_call_std_function wrappedCallback = [&ret, &callback, &capturedJavaException](
                 duk_context *receivedCtx) {
             try {
-                ret = std::move(callback(receivedCtx));
+                ret = callback(receivedCtx);
             } catch (JavaException &javaException) {
                 capturedJavaException = javaException.moveClone();
             }
@@ -46,7 +49,7 @@ namespace jsvm {
             capturedJavaException->propagateToJava(env);
 
             duk_pop(priv->ctx); // returned undefined
-            return NULL;
+            return static_cast<T>(NULL);
         } else if (dukExecRet == DUK_EXEC_ERROR) {
             // A JavaScript error has been thrown, wrap into a JSError class
             // and propagate it to Java.
@@ -57,7 +60,7 @@ namespace jsvm {
             JSError(env, errorValue).propagateToJava(env);
 
             duk_pop(priv->ctx); // returned error instance
-            return NULL;
+            return static_cast<T>(NULL);
         } else {
             // Successful execution. Return the return value of the provided callback.
 
