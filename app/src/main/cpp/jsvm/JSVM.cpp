@@ -5,6 +5,7 @@
 #include <jsvm/JSVM.h>
 #include "JSValue.h"
 #include "invokeSafe.h"
+#include "JSObject.h"
 #include <functional>
 
 using namespace jsvm;
@@ -85,6 +86,59 @@ Java_me_ntrrgc_jsvm_JSVM_getStackSizeNative(JNIEnv *env, jobject instance) {
 
     duk_idx_t topIndex = duk_get_top_index(ctx);
     return topIndex != DUK_INVALID_INDEX ? (int) topIndex - 1 : 0;
+
+}
+
+
+JNIEXPORT jobject JNICALL
+Java_me_ntrrgc_jsvm_JSVM_newObjectNative(JNIEnv *env, jobject instance) {
+
+    JSVM jsVM = (JSVM) instance;
+    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+
+    return JSVMPriv_invokeSafe<JSObject>(priv, [priv, env, jsVM] (duk_context *ctx) {
+
+        // Push empty object
+        duk_push_object(ctx);
+
+        JSObject ret = JSObject_createFromStack(env, jsVM, -1);
+
+        // Restore stack
+        duk_pop(ctx); // object
+
+        return ret;
+
+    });
+}
+
+JNIEXPORT jobject JNICALL
+Java_me_ntrrgc_jsvm_JSVM_newObjectNativeWithProto(JNIEnv *env, jobject instance, jobject proto_) {
+
+    JSVM jsVM = (JSVM) instance;
+    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSObject proto = (JSObject) proto_;
+
+    return JSVMPriv_invokeSafe<JSObject>(priv, [priv, env, jsVM, proto] (duk_context *ctx) {
+
+        if (proto == NULL) {
+            // Push bare object (inherits from null)
+            duk_push_bare_object(ctx);
+        } else {
+            // Push new object and set prototype
+            duk_push_object(ctx);
+
+            JSObject_push(env, proto);
+            duk_set_prototype(ctx, -2);
+        }
+
+        JSObject ret = JSObject_createFromStack(env, jsVM, -1);
+
+        // Restore stack
+        duk_pop(ctx); // object
+
+        return ret;
+
+    });
 
 }
 

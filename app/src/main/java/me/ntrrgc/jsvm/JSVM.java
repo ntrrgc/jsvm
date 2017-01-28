@@ -1,5 +1,8 @@
 package me.ntrrgc.jsvm;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 /**
  * Created by ntrrgc on 1/14/17.
  */
@@ -72,4 +75,20 @@ public class JSVM {
         }
     }
     private native int getStackSizeNative();
+
+    @NotNull
+    public JSObject newObject() {
+        synchronized (this.lock) {
+            return this.newObjectNative();
+        }
+    }
+    private native JSObject newObjectNative();
+
+    @NotNull
+    public JSObject newObjectWithProto(@Nullable JSObject proto) {
+        synchronized (this.lock) {
+            return this.newObjectNativeWithProto(proto);
+        }
+    }
+    private native JSObject newObjectNativeWithProto(JSObject proto);
 }

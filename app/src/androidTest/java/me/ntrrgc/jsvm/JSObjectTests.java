@@ -105,4 +105,37 @@ public class JSObjectTests {
 
         assertEquals("hello", fun.get("name").asStringOrNull());
     }
+
+    @Test
+    public void newObject() throws Exception {
+        JSObject obj = jsvm.newObject();
+
+        obj.set("hi", JSValue.aString("hello"));
+        assertEquals("hello", obj.get("hi").asString());
+
+        assertTrue(obj.contains("hasOwnProperty"));
+        assertTrue(obj.contains("toString"));
+        assertEquals(obj.get("__proto__").asObject(), jsvm.evaluateScript("Object").asObject());
+    }
+
+    @Test
+    public void newBareObject() throws Exception {
+        JSObject obj = jsvm.newObjectWithProto(null);
+
+        obj.set("hi", JSValue.aString("hello"));
+        assertEquals("hello", obj.get("hi").asString());
+
+        assertFalse(obj.contains("hasOwnProperty"));
+        assertFalse(obj.contains("toString"));
+    }
+
+    @Test
+    public void newInheritingObject() throws Exception {
+        JSObject parent = jsvm.newObject();
+        JSObject child = jsvm.newObjectWithProto(parent);
+
+        parent.set("hi", JSValue.aString("hello"));
+        assertEquals("hello", child.get("hi").asString());
+        assertEquals(parent, child.get("__proto__").asObject());
+    }
 }
