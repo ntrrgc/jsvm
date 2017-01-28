@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
         PerformanceTests tests = new PerformanceTests();
 
-        String testResults = tests.testPropertyRead();
+        String testResults = tests.testPropertyRead() + "\n" + tests.testObjectCreation();
 
         tv.setText(testResults);
     }

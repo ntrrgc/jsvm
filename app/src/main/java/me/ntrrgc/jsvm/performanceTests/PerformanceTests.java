@@ -105,4 +105,22 @@ public class PerformanceTests {
         Log.i("Test results", log.toString());
         return log.toString();
     }
+
+    public String testObjectCreation() {
+        final long iterations = 100000;
+        StringBuilder log = new StringBuilder();
+
+        log.append("Starting testObjectCreation:\n");
+        JSVM jsvm = new JSVM();
+
+        final long start = System.currentTimeMillis();
+        for (int i = 0; i < iterations; i++) {
+            jsvm.newObject();
+        }
+        final long timeCreation = System.currentTimeMillis() - start;
+        log.append("Time per object creation: " +
+                formatInstant((double)timeCreation / iterations / 1000) + ".\n");
+
+        return log.toString();
+    }
 }
