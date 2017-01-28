@@ -38,6 +38,7 @@ add_library( # Sets the name of the library.
              src/main/cpp/jsvm/javaClasses.cpp
              src/main/cpp/jsvm/stashIndices.h
              src/main/cpp/jsvm/ObjectBook.h
+             src/main/cpp/jsvm/ObjectBook.cpp
              src/main/cpp/jsvm/JSVM.h
              src/main/cpp/jsvm/JSVM.cpp
              src/main/cpp/jsvm/JSValue.h

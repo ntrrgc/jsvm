@@ -41,31 +41,40 @@ namespace jsvm {
 
         int dukExecRet = duk_safe_call(priv->ctx, _duk_raw_function_call, &wrappedCallback, 0, 1);
 
-        if (capturedJavaException) {
-            // A wrapped Java exception has been throw in C++, but not propagated yet to Java!
-            // Propagate it now:
+        try {
+            if (capturedJavaException) {
+                // A wrapped Java exception has been throw in C++, but not propagated yet to Java!
+                // Propagate it now:
+                JNIEnv *env = priv->env;
+                jsvm_assert(env->ExceptionCheck() == JNI_FALSE);
+                capturedJavaException->propagateToJava(env);
+
+                duk_pop(priv->ctx); // returned undefined
+                return static_cast<T>(NULL);
+            } else if (dukExecRet == DUK_EXEC_ERROR) {
+                // A JavaScript error has been thrown, wrap into a JSError class
+                // and propagate it to Java.
+                JNIEnv *env = priv->env;
+                jsvm_assert(env->ExceptionCheck() == JNI_FALSE);
+
+                JSValue errorValue = JSValue_createFromStack(env, priv->jsVM, -1);
+                JSError(env, errorValue).propagateToJava(env);
+
+                duk_pop(priv->ctx); // returned error instance
+                return static_cast<T>(NULL);
+            } else {
+                // Successful execution. Return the return value of the provided callback.
+
+                duk_pop(priv->ctx); // returned undefined
+                return ret;
+            }
+        } catch (JavaException& error) {
+            // An error occurred while trying to return, try to throw it.
             JNIEnv *env = priv->env;
-            jsvm_assert(env->ExceptionCheck() == JNI_FALSE);
-            capturedJavaException->propagateToJava(env);
-
-            duk_pop(priv->ctx); // returned undefined
-            return static_cast<T>(NULL);
-        } else if (dukExecRet == DUK_EXEC_ERROR) {
-            // A JavaScript error has been thrown, wrap into a JSError class
-            // and propagate it to Java.
-            JNIEnv *env = priv->env;
-            jsvm_assert(env->ExceptionCheck() == JNI_FALSE);
-
-            JSValue errorValue = JSValue_createFromStack(env, priv->jsVM, -1);
-            JSError(env, errorValue).propagateToJava(env);
-
-            duk_pop(priv->ctx); // returned error instance
-            return static_cast<T>(NULL);
-        } else {
-            // Successful execution. Return the return value of the provided callback.
-
-            duk_pop(priv->ctx); // returned undefined
-            return ret;
+            if (!env->ExceptionCheck()) {
+                error.propagateToJava(env);
+            }
+            return static_cast<T>(0);
         }
     }
 

@@ -12,13 +12,24 @@ JSObject
 jsvm::JSObject_createFromStack(JNIEnv *env, JSVM jsVM, int stackPosition) {
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
 
-    ObjectBook::handle_t handle = priv->objectBook.storeStackValue(stackPosition);
+    bool handleAlreadyExists;
+    ObjectBook::handle_t handle = priv->objectBook.storeStackValue(stackPosition, &handleAlreadyExists);
 
-    JSObject jsObject = (JSObject) env->NewObject(JSObject_Class, JSObject_ctor);
-    env->SetObjectField(jsObject, JSObject_jsVM, jsVM);
-    env->SetIntField(jsObject, JSObject_handle, handle);
+    if (handleAlreadyExists) {
+        // Fetch previously saved JSObject
+        return priv->objectBook.getJSObjectWithHandle(handle);
+    } else {
+        // Create new JSObject
+        JSObject jsObject = (JSObject) env->NewObject(JSObject_Class, JSObject_ctor);
+        env->SetObjectField(jsObject, JSObject_jsVM, jsVM);
+        env->SetIntField(jsObject, JSObject_handle, handle);
 
-    return jsObject;
+        // Store it so it can be reused
+        priv->objectBook.saveJSObjectWithHandle(env, handle, jsObject);
+
+        return jsObject;
+    }
+
 }
 
 void
@@ -70,7 +81,7 @@ Java_me_ntrrgc_jsvm_JSObject_finalizeNative(JNIEnv *env, jobject instance, jobje
     JSVM jsVM = (JSVM) jsVM_;
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
 
-    priv->objectBook.removeObjectWithHandle((ObjectBook::handle_t) handle);
+    priv->objectBook.removeObjectWithHandle(env, (ObjectBook::handle_t) handle);
 
 }
 

@@ -116,6 +116,7 @@ public class JSObjectTests {
         assertTrue(obj.contains("hasOwnProperty"));
         assertTrue(obj.contains("toString"));
         assertEquals(obj.get("__proto__").asObject(), jsvm.evaluateScript("({}.__proto__)").asObject());
+        assertSame(obj.get("__proto__").asObject(), jsvm.evaluateScript("({}.__proto__)").asObject());
     }
 
     @Test
@@ -136,6 +137,6 @@ public class JSObjectTests {
 
         parent.set("hi", JSValue.aString("hello"));
         assertEquals("hello", child.get("hi").asString());
-        assertEquals(parent, child.get("__proto__").asObject());
+        assertSame(parent, child.get("__proto__").asObject());
     }
 }
