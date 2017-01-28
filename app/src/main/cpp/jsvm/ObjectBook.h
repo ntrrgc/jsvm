@@ -28,6 +28,7 @@ namespace jsvm {
          */
         handle_t storeStackValue(int stackPosition) {
             jsvm_assert(m_ctx);
+            jsvm_assert(duk_is_object(m_ctx, stackPosition));
             handle_t handle = allocateHandle();
 
             // Copy the element at the provided stack position
