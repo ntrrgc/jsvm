@@ -105,4 +105,10 @@ public class JSValueTests {
         assertNotNull(result.asFunction());
         assertSame(result.asObject(), result.asFunction());
     }
+
+    @Test
+    public void testEquals() throws Exception {
+        JSValue five = JSValue.aNumber(5);
+        assertEquals(five, jsvm.evaluateScript("5"));
+    }
 }

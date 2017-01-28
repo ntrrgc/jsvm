@@ -11,9 +11,11 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class JSValue {
     private int type;
+
+    @Nullable
     private Object value;
 
-    private JSValue(int type, Object value) {
+    private JSValue(int type, @Nullable Object value) {
         this.type = type;
         this.value = value;
     }
@@ -275,11 +277,15 @@ public final class JSValue {
         return new JSValue(TYPE_OBJECT, value);
     }
 
+    /* package */ static boolean equals(@Nullable Object a, @Nullable Object b) {
+        return (a == b) || (a != null && a.equals(b));
+    }
+
     @Override
     public final boolean equals(Object obj) {
         if (obj instanceof JSValue) {
             JSValue other = (JSValue) obj;
-            return other.type == type && other.value == value;
+            return other.type == type && equals(other.value, value);
         } else {
             return false;
         }
@@ -287,7 +293,7 @@ public final class JSValue {
 
     @Override
     public final int hashCode() {
-        return this.type ^ this.value.hashCode();
+        return this.type ^ (this.value != null ? this.value.hashCode() : 0);
     }
 
     @Override
@@ -302,7 +308,7 @@ public final class JSValue {
             case TYPE_NUMBER:
             case TYPE_STRING:
             case TYPE_OBJECT:
-                return asStringOrNull();
+                return asString();
             case TYPE_UNSUPPORTED:
                 return "<unsupported type>";
             default:
