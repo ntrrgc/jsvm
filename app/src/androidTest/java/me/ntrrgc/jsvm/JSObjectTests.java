@@ -115,7 +115,7 @@ public class JSObjectTests {
 
         assertTrue(obj.contains("hasOwnProperty"));
         assertTrue(obj.contains("toString"));
-        assertEquals(obj.get("__proto__").asObject(), jsvm.evaluateScript("Object").asObject());
+        assertEquals(obj.get("__proto__").asObject(), jsvm.evaluateScript("({}.__proto__)").asObject());
     }
 
     @Test
