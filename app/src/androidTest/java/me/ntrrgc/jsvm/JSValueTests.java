@@ -7,8 +7,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static junit.framework.Assert.assertSame;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -92,5 +94,15 @@ public class JSValueTests {
 
         assertTrue(result.isObject());
         assertEquals("I am the number 3", result.asObjectOrNull().toString());
+    }
+
+    @Test
+    public void testFunctionsAreObjects() throws Exception {
+        JSValue result = jsvm.evaluateScript("(function() {})");
+        assertTrue(result.isFunction());
+        assertTrue(result.isObject());
+        assertNotNull(result.asObject());
+        assertNotNull(result.asFunction());
+        assertSame(result.asObject(), result.asFunction());
     }
 }

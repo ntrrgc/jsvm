@@ -4,6 +4,7 @@
 
 #include "JSValue.h"
 #include "JSObject.h"
+#include "JSFunction.h"
 #include <jsvm/JSVM.h>
 using namespace jsvm;
 
@@ -53,7 +54,11 @@ jsvm::JSValue_createFromStack(JNIEnv *env, JSVM jsVM, int stackPosition) {
             break; }
         case DUK_TYPE_OBJECT:
             valueType = JSVALUE_TYPE_OBJECT;
-            boxedValue = JSObject_createFromStack(env, jsVM, stackPosition);
+            if (duk_is_function(ctx, stackPosition)) {
+                boxedValue = JSFunction_createFromStack(env, jsVM, stackPosition);
+            } else {
+                boxedValue = JSObject_createFromStack(env, jsVM, stackPosition);
+            }
             break;
         default:
             valueType = JSVALUE_TYPE_UNSUPPORTED;

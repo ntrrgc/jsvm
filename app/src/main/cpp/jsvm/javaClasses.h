@@ -40,6 +40,9 @@ namespace jsvm {
     extern jfieldID     JSObject_jsVM;
     extern jfieldID     JSObject_handle;
 
+    extern jclass       JSFunction_Class;
+    extern jmethodID    JSFunction_ctor;
+
     void initClassesAndFields(JNIEnv *env);
     void tearDownClassesAndFields(JNIEnv *env);
 

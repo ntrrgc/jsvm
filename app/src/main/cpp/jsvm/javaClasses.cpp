@@ -36,6 +36,9 @@ namespace jsvm {
     jmethodID   JSObject_ctor = NULL;
     jfieldID    JSObject_jsVM = NULL;
     jfieldID    JSObject_handle = NULL;
+
+    jclass      JSFunction_Class = NULL;
+    jmethodID   JSFunction_ctor = NULL;
 }
 
 using namespace jsvm;
@@ -97,6 +100,9 @@ void ::jsvm::initClassesAndFields(JNIEnv *env) {
     JSObject_ctor = env->GetMethodID(JSObject_Class, "<init>", "()V");
     JSObject_jsVM = env->GetFieldID(JSObject_Class, "jsVM", "L" "me/ntrrgc/jsvm/JSVM;");
     JSObject_handle = env->GetFieldID(JSObject_Class, "handle", "I");
+
+    JSFunction_Class = findClass(env, "me/ntrrgc/jsvm/JSFunction");
+    JSFunction_ctor = env->GetMethodID(JSFunction_Class, "<init>", "()V");
 }
 
 

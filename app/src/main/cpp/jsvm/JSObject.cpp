@@ -145,7 +145,7 @@ Java_me_ntrrgc_jsvm_JSObject_setByKeyNative(JNIEnv *env, jobject instance, jobje
         duk_put_prop(ctx, -3);
 
         // Restore stack
-        duk_pop(ctx); // objectBook
+        duk_pop(ctx); // object
 
     });
 }
@@ -167,7 +167,7 @@ Java_me_ntrrgc_jsvm_JSObject_setByIndexNative(JNIEnv *env, jobject instance, job
         duk_put_prop_index(ctx, -2, (duk_uarridx_t) index);
 
         // Restore stack
-        duk_pop(ctx); // objectBook
+        duk_pop(ctx); // object
 
     });
 }
@@ -188,7 +188,7 @@ Java_me_ntrrgc_jsvm_JSObject_containsByKeyNative(JNIEnv *env, jobject instance, 
         jboolean ret = (jboolean) duk_has_prop(ctx, -2);
 
         // Restore stack
-        duk_pop(ctx); // objectBook
+        duk_pop(ctx); // object
 
         return ret;
 
@@ -211,7 +211,7 @@ Java_me_ntrrgc_jsvm_JSObject_containsByIndexNative(JNIEnv *env, jobject instance
         jboolean ret = (jboolean) duk_has_prop_index(ctx, -1, (duk_uarridx_t) index);
 
         // Restore stack
-        duk_pop(ctx); // objectBook
+        duk_pop(ctx); // object
 
         return ret;
 

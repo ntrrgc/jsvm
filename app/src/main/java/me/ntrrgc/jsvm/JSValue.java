@@ -61,6 +61,11 @@ public final class JSValue {
         return type == TYPE_OBJECT;
     }
 
+    @Contract(pure = true)
+    public final boolean isFunction() {
+        return value instanceof JSFunction;
+    }
+
     @NotNull
     @Contract(pure = true)
     private static String getTypeAsString(int type) {
@@ -157,6 +162,16 @@ public final class JSValue {
         }
     }
 
+    @Nullable
+    @Contract(pure = true)
+    public final JSFunction asFunctionOrNull() {
+        if (isFunction()) {
+            return (JSFunction) value;
+        } else {
+            return null;
+        }
+    }
+
     @Contract(pure = true)
     public final boolean asBoolean() {
         Boolean value = this.asBooleanOrNull();
@@ -211,10 +226,22 @@ public final class JSValue {
     @NotNull
     @Contract(pure = true)
     public final JSObject asObject() {
-        if (isObject()) {
-            return (JSObject) value;
+        JSObject value = this.asObjectOrNull();
+        if (value != null) {
+            return value;
         } else {
             throw new InvalidJSValueType(getTypeAsString(TYPE_OBJECT), getTypeAsString(type), this);
+        }
+    }
+
+    @NotNull
+    @Contract(pure = true)
+    public final JSFunction asFunction() {
+        JSFunction jsFunction = this.asFunctionOrNull();
+        if (jsFunction != null) {
+            return jsFunction;
+        } else {
+            throw new InvalidJSValueType("function", getTypeAsString(type), this);
         }
     }
 

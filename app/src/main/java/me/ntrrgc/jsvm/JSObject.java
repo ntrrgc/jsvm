@@ -5,15 +5,15 @@ package me.ntrrgc.jsvm;
  */
 
 public class JSObject {
-    private JSVM jsVM;
-    private int handle;
+    protected JSVM jsVM;
+    protected int handle;
     private boolean aliveHandle = true;
 
     protected boolean isStillAlive() {
         return aliveHandle && !jsVM.finalized;
     }
 
-    private JSObject() {}
+    protected JSObject() {}
 
     public JSValue get(String key) {
         synchronized (jsVM.lock) {
