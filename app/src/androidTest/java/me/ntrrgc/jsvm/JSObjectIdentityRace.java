@@ -26,7 +26,7 @@ public class JSObjectIdentityRace {
         assertEquals(0, jsvm.getStackSize());
     }
 
-    private void hopeForGC() throws Exception {
+    /* package */ static void hopeForGC() throws Exception {
         // Do something that generates garbage and hopefully will
         // not be optimized out by the JIT compiler
 
