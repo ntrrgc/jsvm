@@ -91,4 +91,6 @@ public class JSVM {
         }
     }
     private native JSObject newObjectNativeWithProto(JSObject proto);
+
+    public native int getWeakRefCount();
 }

@@ -13,8 +13,6 @@ namespace jsvm {
 
     typedef _JSObject *JSObject;
 
-    JSObject JSObject_createFromStack(JNIEnv *env, JSVM jsVM, int stackPosition);
-
     void JSObject_push(JNIEnv* env, JSObject jsObject);
 
 }

@@ -11,6 +11,7 @@
 namespace jsvm {
 
     class _JSObject;
+    class JSVMPriv;
 
     /**
      * This class manages the "object book", an array
@@ -24,39 +25,30 @@ namespace jsvm {
      */
     struct ObjectBook {
         typedef unsigned int handle_t;
+        static const handle_t NULL_HANDLE = (handle_t) -1;
 
         /**
          * Insert the object at the top of the Duktape stack
-         * into the object book and return its handle.
+         * into the object book and return a JSObject that
+         * references it.
          *
-         * If the object already exists in the book, its handle
-         * is reused and the object book is not modified in any
-         * way.
-         *
-         * In `alreadyExists` it is written whether the object
-         * already existed in the book.
-         *
-         * If the handle did not exist before the caller MUST
-         * then call saveJSObjectWithHandle() with the created
-         * JSObject.
+         * If the object already exists in the book, the same
+         * JSObject is reused and the object book is not modified
+         * in any way.
          */
-        handle_t storeStackValue(int stackPosition, bool* alreadyExists);
-
-        // Save the JSObject created to access the JS object with
-        // the provided handle so that it can be reused if the
-        // same JS object is requested later.
-        void saveJSObjectWithHandle(JNIEnv* env, handle_t handle, _JSObject *jsObject);
-
-        _JSObject* getJSObjectWithHandle(handle_t handle);
+        _JSObject * exposeObject(JNIEnv *pEnv, duk_idx_t stackPos);
 
         /**
-         * Remove the object associated to handle so that its
+         * Remove the object associated to a handle so that its
          * memory can be reclaimed by the Duktape GC.
          *
          * The handler becomes free and will be reused for the
          * next allocated object.
+         *
+         * Called by JSObject.finalizeNative()
          */
-        void removeObjectWithHandle(JNIEnv* env, handle_t handle);
+        void finalizeJSObjectWithHandle(JNIEnv *env, _JSObject *jsObject,
+                                        ObjectBook::handle_t handle);
 
         /**
          * Retrieve an object from the book using its handle
@@ -74,10 +66,11 @@ namespace jsvm {
 
         std::vector<_JSObject*> m_jsObjectsByHandle;
 
-        ObjectBook() : m_ctx(NULL), m_nextFree(0) { }
-        void lateInit(duk_context *ctx);
+        ObjectBook() : ctx(NULL), priv(NULL), m_nextFree(0) { }
+        void lateInit(duk_context *ctx, JSVMPriv* priv);
 
-        duk_context *m_ctx;
+        duk_context *ctx;
+        JSVMPriv *priv;
         FreeList m_freeList;
         handle_t m_nextFree;
 
@@ -85,7 +78,43 @@ namespace jsvm {
 
         void deallocateHandle(handle_t handle);
 
+        /**
+         * Save the created JSObject so that it can be reused if
+         * the same JS object (and therefore handle) is requested later.
+         */
+        void saveNewJSObjectWithHandle(JNIEnv *env, handle_t handle, _JSObject *jsObject);
+
+        /**
+         * Retrieve the latest JSObject that uses a certain handle
+         * from the handle -> Weak JSObject table.
+         */
+        _JSObject* getJSObjectWithHandle(JNIEnv *env, ObjectBook::handle_t handle);
+
+        /**
+         * Remove a JSObject from the handle -> Weak JSObject table
+         * and release its GlobalWeakRef.
+         */
         void forgetJSObjectWithHandle(JNIEnv* env, handle_t handle);
+
+        /**
+         * Instantiate a JSObject or JSFunction with the given handle.
+         * `stackPosition` is used to read the type of the object and
+         * create the correct subclass.
+         */
+        _JSObject *createJSObjectFromStack(JNIEnv *env, ObjectBook::handle_t handle,
+                                           duk_idx_t stackPosition);
+
+        /**
+         * Store the handle in a private property of the object at the top of
+         * the stack. This suceeds even if the object is sealed or frozen.
+         */
+        void setStackTopObjectHandle(handle_t handle);
+
+        /**
+         * Read the handle stored in a private property of the object at the
+         * top of the stack.
+         */
+        handle_t getStackTopObjectHandle();
     };
 
 }

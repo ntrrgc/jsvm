@@ -54,11 +54,7 @@ jsvm::JSValue_createFromStack(JNIEnv *env, JSVM jsVM, int stackPosition) {
             break; }
         case DUK_TYPE_OBJECT:
             valueType = JSVALUE_TYPE_OBJECT;
-            if (duk_is_function(ctx, stackPosition)) {
-                boxedValue = JSFunction_createFromStack(env, jsVM, stackPosition);
-            } else {
-                boxedValue = JSObject_createFromStack(env, jsVM, stackPosition);
-            }
+            boxedValue = priv->objectBook.exposeObject(env, stackPosition);
             break;
         default:
             valueType = JSVALUE_TYPE_UNSUPPORTED;

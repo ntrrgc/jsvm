@@ -76,7 +76,7 @@ public class JSObject {
             // If the entire VM was already destroyed in this
             // same GC cycle there is no point in trying to
             // destroy individual referenced objects.
-            if (!isStillAlive()) {
+            if (isStillAlive()) {
                 aliveHandle = false;
 
                 if (!jsVM.finalized) {

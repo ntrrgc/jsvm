@@ -23,6 +23,14 @@ jsvm::JSVM_getPriv(JNIEnv *env, JSVM jsVM) {
 
 extern "C" {
 
+extern int weakRefCount;
+JNIEXPORT jint JNICALL
+Java_me_ntrrgc_jsvm_JSVM_getWeakRefCount(JNIEnv *env, jobject instance) {
+
+    return weakRefCount;
+
+}
+
 JNIEXPORT void JNICALL
 Java_me_ntrrgc_jsvm_JSVM_initializeLibrary(JNIEnv *env, jclass type) {
     initClassesAndFields(env);
@@ -101,7 +109,7 @@ Java_me_ntrrgc_jsvm_JSVM_newObjectNative(JNIEnv *env, jobject instance) {
         // Push empty object
         duk_push_object(ctx);
 
-        JSObject ret = JSObject_createFromStack(env, jsVM, -1);
+        JSObject ret = priv->objectBook.exposeObject(env, -1);
 
         // Restore stack
         duk_pop(ctx); // object
@@ -131,7 +139,7 @@ Java_me_ntrrgc_jsvm_JSVM_newObjectNativeWithProto(JNIEnv *env, jobject instance,
             duk_set_prototype(ctx, -2);
         }
 
-        JSObject ret = JSObject_createFromStack(env, jsVM, -1);
+        JSObject ret = priv->objectBook.exposeObject(env, -1);
 
         // Restore stack
         duk_pop(ctx); // object
@@ -160,7 +168,7 @@ JSVMPriv::JSVMPriv(JNIEnv *initialJNIEnv, JSVM initialJSVM)
     duk_put_prop_string(ctx, -2, "global");
     duk_pop(ctx);
 
-    this->objectBook.lateInit(ctx);
+    this->objectBook.lateInit(ctx, this);
 }
 
 JSVMPriv::~JSVMPriv() {

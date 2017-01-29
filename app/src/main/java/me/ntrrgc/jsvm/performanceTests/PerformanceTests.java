@@ -107,7 +107,7 @@ public class PerformanceTests {
     }
 
     public String testObjectCreation() {
-        final long iterations = 100000;
+        final long iterations = 50000;
         StringBuilder log = new StringBuilder();
 
         log.append("Starting testObjectCreation:\n");
@@ -116,6 +116,7 @@ public class PerformanceTests {
         final long start = System.currentTimeMillis();
         for (int i = 0; i < iterations; i++) {
             jsvm.newObject();
+            System.gc();
         }
         final long timeCreation = System.currentTimeMillis() - start;
         log.append("Time per object creation: " +

@@ -7,34 +7,6 @@
 #include <jsvm/JSValue.h>
 using namespace jsvm;
 
-JSFunction
-jsvm::JSFunction_createFromStack(JNIEnv *env, JSVM jsVM, int stackPosition) {
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
-
-    bool handleAlreadyExists;
-    ObjectBook::handle_t handle = priv->objectBook.storeStackValue(stackPosition, &handleAlreadyExists);
-
-    if (handleAlreadyExists) {
-        // Fetch previously saved JSFunction
-        JSFunction jsFunction = (JSFunction) priv->objectBook.getJSObjectWithHandle(handle);
-        jsvm_assert(env->IsInstanceOf(jsFunction, JSFunction_Class));
-
-        return jsFunction;
-    } else {
-        // Create new JSFunction
-        JSFunction jsFunction = (JSFunction) env->NewObject(JSFunction_Class, JSFunction_ctor);
-
-        // Fields are the same as in JSObject superclass
-        env->SetObjectField(jsFunction, JSObject_jsVM, jsVM);
-        env->SetIntField(jsFunction, JSObject_handle, handle);
-
-        // Store it so it can be reused
-        priv->objectBook.saveJSObjectWithHandle(env, handle, jsFunction);
-
-        return jsFunction;
-    }
-}
-
 extern "C" {
 
 JNIEXPORT jobject JNICALL
