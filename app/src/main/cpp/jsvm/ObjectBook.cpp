@@ -52,49 +52,25 @@ JSObject ObjectBook::exposeObject(JNIEnv *env, duk_idx_t stackPosition) {
     // easily and safely.
     duk_dup(ctx, stackPosition);
 
-    // Read the handle property of the object
-    handle_t handle = getStackTopObjectHandle();
+    // Try to find a previously created JSObject
+    JSObject existingJSObject = this->getStackTopExistingJSObject(env);
 
-    if (handle != NULL_HANDLE) {
-        // A handle already exists!
-
-        duk_pop(ctx); // object dup
-
-        // Find an existing JSObject with the same handle
-        JSObject existingJSObject = this->getJSObjectWithHandle(env, handle);
-        if (existingJSObject != NULL) {
-            return existingJSObject;
-        } else {
-            // The JSObject is no longer accessible due to GC, but
-            // the handle has not been reclaimed yet. This may
-            // happen if the JVM decides to free the JSObject while
-            // we are running this code in JSVM, as the JSObject
-            // finalize() method will stay blocked in the synchronize
-            // barrier.
-
-            // Create a new JSObject with the same handle and replace
-            // the dead reference in m_jsObjectsByHandle with the
-            // new one.
-            //
-            // Note JSObject.finalize() will check if its place in
-            // m_jsObjectsByHandle has been taken by this process,
-            // and only if that's not the case, the handle will be
-            // removed from the book.
-
-            JSObject replacementJSObject = this->createJSObjectFromStack(env, handle, stackPosition);
-
-            env->DeleteWeakGlobalRef(m_jsObjectsByHandle[handle]);
-            weakRefCount--;
-            m_jsObjectsByHandle[handle] = (JSObject) env->NewWeakGlobalRef(replacementJSObject);
-            weakRefCount++;
-
-            return replacementJSObject;
-        }
+    if (existingJSObject != NULL) {
+        return existingJSObject;
     } else {
-        // The handle property does not exist
+        // The object does not have handle associated, or
+        // its handle has dead but has not been finalized.
+
+        // This is a good time to perform finalization:
+        // Handles of JSObjects deleted by the JVM GC will
+        // be released, freeing memory for Duktape and
+        // getting more handles to reuse.
+        // This process is fast if no JSObjects have been
+        // deleted since the last execution.
+        gcDeadJSObjects(env);
 
         // Allocate a new handle
-        handle = allocateHandle();
+        handle_t handle = allocateHandle(env);
 
         // Store the handle privately in the object
         setStackTopObjectHandle(handle);
@@ -116,9 +92,30 @@ JSObject ObjectBook::exposeObject(JNIEnv *env, duk_idx_t stackPosition) {
         JSObject jsObject = createJSObjectFromStack(env, handle, stackPosition);
 
         // Store a weak reference so it can be reused
-        priv->objectBook.saveNewJSObjectWithHandle(env, handle, jsObject);
+        saveNewJSObjectWithHandle(env, jsObject, handle);
 
         return jsObject;
+    }
+}
+
+JSObject ObjectBook::getStackTopExistingJSObject(JNIEnv *env) {
+    // Read the current handle property of the object
+    handle_t handle = getStackTopObjectHandle();
+
+    if (handle != NULL_HANDLE) {
+        // A handle exists.
+        // Find an existing JSObject with the same handle.
+        JSObject existingJSObject = this->getJSObjectWithHandle(env, handle);
+        if (existingJSObject != NULL) {
+            return existingJSObject;
+        } else {
+            // The JSObject is no longer accessible due to GC, but
+            // the handle has not been reclaimed yet. That will
+            // happen in the next call to gcDeadJSObjects().
+            return NULL;
+        }
+    } else {
+        return NULL;
     }
 }
 
@@ -163,61 +160,74 @@ void ObjectBook::setStackTopObjectHandle(ObjectBook::handle_t handle) {
     duk_def_prop(ctx, -3, DUK_DEFPROP_FORCE | DUK_DEFPROP_HAVE_VALUE);
 }
 
-void ObjectBook::saveNewJSObjectWithHandle(JNIEnv *env, ObjectBook::handle_t handle,
-                                           _JSObject *jsObject) {
+void ObjectBook::saveNewJSObjectWithHandle(JNIEnv *env, _JSObject *jsObject,
+                                           ObjectBook::handle_t handle) {
     jsvm_assert(jsObject);
-    jsvm_assert(handle < m_jsObjectsByHandle.size());
-    jsvm_assert(m_jsObjectsByHandle[handle] == NULL);
 
-    JSObject weakRef = (JSObject) env->NewWeakGlobalRef(jsObject);
+    ArrayList jsObjectsByHandle = this->priv->jsObjectsByHandle;
+    jsvm_assert(handle < env->CallIntMethod(jsObjectsByHandle, ArrayList_size));
+    jsvm_assert(NULL == env->CallObjectMethod(jsObjectsByHandle, ArrayList_get, handle));
+
+    ReferenceQueue deadJSObjectsRefs = (ReferenceQueue) env->GetObjectField(priv->jsVM, JSVM_deadJSObjectsRefs);
+    jsvm_assert(deadJSObjectsRefs != NULL);
+
+    JSObjectWeakReference weakRef = (JSObjectWeakReference) env->NewObject(
+            JSObjectWeakReference_Class, JSObjectWeakReference_ctor,
+            jsObject, deadJSObjectsRefs, handle);
     jsvm_assert(weakRef);
+
     weakRefCount++;
-    m_jsObjectsByHandle[handle] = weakRef;
+    env->DeleteLocalRef(env->CallObjectMethod(jsObjectsByHandle, ArrayList_set, handle, weakRef));
+    env->DeleteLocalRef(weakRef);
 }
 
 void ObjectBook::forgetJSObjectWithHandle(JNIEnv *env, ObjectBook::handle_t handle) {
-    jsvm_assert(env);
-    jsvm_assert(handle < m_jsObjectsByHandle.size());
-    jsvm_assert(m_jsObjectsByHandle[handle] != NULL);
+    jsvm_assert(env != NULL);
+    ArrayList jsObjectsByHandle = this->priv->jsObjectsByHandle;
+    jsvm_assert(jsObjectsByHandle != NULL);
+    jsvm_assert(handle < env->CallIntMethod(jsObjectsByHandle, ArrayList_size));
 
-    env->DeleteWeakGlobalRef(m_jsObjectsByHandle[handle]);
+    JSObjectWeakReference weakReference = (JSObjectWeakReference)
+            env->CallObjectMethod(jsObjectsByHandle, ArrayList_get, handle);
+    jsvm_assert(weakReference != NULL);
+
+    env->DeleteLocalRef(env->CallObjectMethod(jsObjectsByHandle, ArrayList_set, handle, NULL));
+    env->DeleteLocalRef(weakReference);
     weakRefCount--;
-    m_jsObjectsByHandle[handle] = NULL;
 }
 
 _JSObject *ObjectBook::getJSObjectWithHandle(JNIEnv *env, ObjectBook::handle_t handle) {
-    jsvm_assert(handle < m_jsObjectsByHandle.size());
-    JSObject weakRef = m_jsObjectsByHandle[handle];
+    ArrayList jsObjectsByHandle = this->priv->jsObjectsByHandle;
+    jsvm_assert(jsObjectsByHandle != NULL);
+    jsvm_assert(handle < env->CallIntMethod(jsObjectsByHandle, ArrayList_size));
+
+    JSObjectWeakReference weakRef = (JSObjectWeakReference)
+            env->CallObjectMethod(jsObjectsByHandle, ArrayList_get, handle);
     jsvm_assert(weakRef != NULL);
 
-    // will be null if weakRef has been GCed
-    JSObject localRef = (JSObject) env->NewLocalRef(weakRef);
-    return localRef;
+    // will be null if the JSObject has been GCed
+    JSObject existingJSObject = (JSObject) env->CallObjectMethod(weakRef, JSObjectWeakReference_get);
+
+    env->DeleteLocalRef(weakRef);
+
+    return existingJSObject;
 }
 
-void ObjectBook::finalizeJSObjectWithHandle(JNIEnv *env, JSObject jsObject, ObjectBook::handle_t handle) {
+void ObjectBook::finalizeJSObjectWithHandle(JNIEnv *env, ObjectBook::handle_t handle) {
     jsvm_assert(ctx);
-    jsvm_assert(jsObject);
     jsvm_assert(env);
-    jsvm_assert(handle < m_jsObjectsByHandle.size());
-    jsvm_assert(m_jsObjectsByHandle[handle] != NULL);
 
-    if (!env->IsSameObject(jsObject, m_jsObjectsByHandle[handle])) {
-        // This JSObject was set for GC, but before it entered
-        // the JSVM synchronized block in finalize(), another thread
-        // wanted a JSObject referencing the same object.
-        //
-        // Since this JSObject was no longer valid then, it was
-        // replaced by a new one with the same handle.
-        // (See exposeObject() for more details)
-        //
-        // Return without doing anything to the book, as the new
-        // JSObject may be in use now.
-        return;
-    }
+    // Delete the weak reference from jsObjectsByHandle
+    ArrayList jsObjectsByHandle = this->priv->jsObjectsByHandle;
+    jsvm_assert(jsObjectsByHandle != NULL);
+    jsvm_assert(handle < env->CallIntMethod(jsObjectsByHandle, ArrayList_size));
+    jsvm_assert(checkLocalRefIsNotNullAndRelease(env, env->CallObjectMethod(
+            jsObjectsByHandle, ArrayList_get, handle)));
 
-    // Forget the associated JSObject
+    // Forget the associated JSObject weak reference
     forgetJSObjectWithHandle(env, handle);
+
+    // Remove it from the object book:
 
     // Get the object book
     duk_push_global_stash(ctx);
@@ -226,8 +236,17 @@ void ObjectBook::finalizeJSObjectWithHandle(JNIEnv *env, JSObject jsObject, Obje
     // Get the object
     duk_get_prop_index(ctx, -1, handle);
 
-    // Reset the handle property in the object
-    setStackTopObjectHandle(NULL_HANDLE);
+    // Read its currently associated handle property
+    handle_t objectCurrentHandle = this->getStackTopObjectHandle();
+
+    // If the object still has this handle written in its
+    // hidden symbol, unset it.
+    // It may not have this handle if the object was given
+    // a new handle before this one was finalized.
+    if (objectCurrentHandle == handle) {
+        // Reset the handle property in the object
+        this->setStackTopObjectHandle(NULL_HANDLE);
+    }
 
     duk_pop(ctx); // object
 
@@ -238,7 +257,7 @@ void ObjectBook::finalizeJSObjectWithHandle(JNIEnv *env, JSObject jsObject, Obje
     // Restore the stack
     duk_pop_2(ctx); // book, global stash
 
-    // Deallocate the handle so that it can be reused later
+    // Deallocate the handle so that it can be reused in later allocations
     deallocateHandle(handle);
 }
 
@@ -252,6 +271,7 @@ void ObjectBook::pushObjectWithHandle(ObjectBook::handle_t handle) {
 
     // Fetch the handle entry with the provided handle:
     duk_get_prop_index(ctx, -1, handle);
+    jsvm_assert(duk_is_object(ctx, -1));
 
     // Remove the stack and book from the stack,
     // leaving the retrieved object on top of what was
@@ -260,17 +280,43 @@ void ObjectBook::pushObjectWithHandle(ObjectBook::handle_t handle) {
     duk_pop_2(ctx);
 }
 
-ObjectBook::handle_t ObjectBook::allocateHandle() {
+ObjectBook::handle_t ObjectBook::allocateHandle(JNIEnv* env) {
     if (!m_freeList.empty()) {
         handle_t ret = m_freeList.top();
         m_freeList.pop();
         return ret;
     } else {
-        m_jsObjectsByHandle.push_back(NULL);
+        // Expand the jsObjectsByHandle table one entry larger
+        ArrayList jsObjectsByHandle = this->priv->jsObjectsByHandle;
+        jsvm_assert(jsObjectsByHandle != NULL);
+        env->CallBooleanMethod(jsObjectsByHandle, ArrayList_add, NULL);
+
         return m_nextFree++;
     }
 }
 
 void ObjectBook::deallocateHandle(ObjectBook::handle_t handle) {
     m_freeList.push(handle);
+}
+
+void ObjectBook::gcDeadJSObjects(JNIEnv *env) {
+    jsvm_assert(env != NULL);
+    ReferenceQueue deadJSObjectsRefs = (ReferenceQueue)
+            env->GetObjectField(priv->jsVM, JSVM_deadJSObjectsRefs);
+    jsvm_assert(deadJSObjectsRefs != NULL);
+
+    // For each dead weak reference...
+    JSObjectWeakReference nextReference = NULL;
+    while (NULL != (nextReference = (JSObjectWeakReference)
+            env->CallObjectMethod(deadJSObjectsRefs, ReferenceQueue_poll)))
+    {
+        // Recover the handle of the dead JSObject
+        handle_t handle = (handle_t)
+                env->GetIntField(nextReference, JSObjectWeakReference_handle);
+
+        // Clean the resources associated with it
+        finalizeJSObjectWithHandle(env, handle);
+
+        env->DeleteLocalRef(nextReference);
+    }
 }

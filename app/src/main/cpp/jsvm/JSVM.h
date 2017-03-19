@@ -16,10 +16,6 @@ namespace jsvm {
     class _JSVM : public _jobject {};
     typedef _JSVM* JSVM;
 
-    struct WrappedJmpBuf {
-        jmp_buf jmpBuf;
-    };
-
     /**
      * This class stores and manages JSVM internals.
      *
@@ -33,10 +29,15 @@ namespace jsvm {
         duk_context *ctx;
         // Used to invoke Java methods and throw Java exceptions.
         JNIEnv *env;
+
         // Pointer to the instance of JSVM in Java.
         // It's only valid since load() is called
         // until control returns to Java code.
         JSVM jsVM;
+
+        // Cached field, so that a local reference is not
+        // created every time.
+        ArrayList jsObjectsByHandle;
 
         ObjectBook objectBook;
 
@@ -57,6 +58,8 @@ namespace jsvm {
         void load(JNIEnv *env, JSVM jsVM) {
             this->env = env;
             this->jsVM = jsVM;
+            this->jsObjectsByHandle = (ArrayList)
+                    env->GetObjectField(jsVM, JSVM_jsObjectsByHandle);
         }
     };
 

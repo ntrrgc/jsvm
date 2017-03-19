@@ -15,6 +15,22 @@ namespace jsvm {
 
     jclass      JSVM_Class = NULL;
     jfieldID    JSVM_hPriv = NULL;
+    jfieldID    JSVM_jsObjectsByHandle = NULL;
+    jfieldID    JSVM_deadJSObjectsRefs = NULL;
+
+    jclass      JSObjectWeakReference_Class = NULL;
+    jmethodID   JSObjectWeakReference_ctor = NULL;
+    jmethodID   JSObjectWeakReference_get = NULL;
+    jfieldID    JSObjectWeakReference_handle = NULL;
+
+    jclass      ArrayList_Class = NULL;
+    jmethodID   ArrayList_add = NULL;
+    jmethodID   ArrayList_get = NULL;
+    jmethodID   ArrayList_set = NULL;
+    jmethodID   ArrayList_size = NULL;
+
+    jclass      ReferenceQueue_Class = NULL;
+    jmethodID   ReferenceQueue_poll = NULL;
 
     jclass      JSVMInternalError_Class = NULL;
     jmethodID   JSVMInternalError_ctor = NULL;
@@ -73,6 +89,23 @@ void ::jsvm::initClassesAndFields(JNIEnv *env) {
 
     JSVM_Class = findClass(env, "me/ntrrgc/jsvm/JSVM");
     JSVM_hPriv = env->GetFieldID(JSVM_Class, "hPriv", "J");
+    JSVM_jsObjectsByHandle = env->GetFieldID(JSVM_Class, "jsObjectsByHandle", "Ljava/util/ArrayList;");
+    JSVM_deadJSObjectsRefs = env->GetFieldID(JSVM_Class, "deadJSObjectsRefs", "Ljava/lang/ref/ReferenceQueue;");
+
+    JSObjectWeakReference_Class = findClass(env, "me/ntrrgc/jsvm/JSObjectWeakReference");
+    JSObjectWeakReference_ctor = env->GetMethodID(JSObjectWeakReference_Class, "<init>",
+                                                  "(Lme/ntrrgc/jsvm/JSObject;Ljava/lang/ref/ReferenceQueue;I)V");
+    JSObjectWeakReference_get = env->GetMethodID(JSObjectWeakReference_Class, "get", "()Ljava/lang/Object;");
+    JSObjectWeakReference_handle = env->GetFieldID(JSObjectWeakReference_Class, "handle", "I");
+
+    ArrayList_Class = findClass(env, "java/util/ArrayList");
+    ArrayList_add = env->GetMethodID(ArrayList_Class, "add", "(Ljava/lang/Object;)Z");
+    ArrayList_get = env->GetMethodID(ArrayList_Class, "get", "(I)Ljava/lang/Object;");
+    ArrayList_set = env->GetMethodID(ArrayList_Class, "set", "(ILjava/lang/Object;)Ljava/lang/Object;");
+    ArrayList_size = env->GetMethodID(ArrayList_Class, "size", "()I");
+
+    ReferenceQueue_Class = findClass(env, "java/lang/ref/ReferenceQueue");
+    ReferenceQueue_poll = env->GetMethodID(ReferenceQueue_Class, "poll", "()Ljava/lang/ref/Reference;");
 
     JSVMInternalError_Class = findClass(env, "me/ntrrgc/jsvm/JSVMInternalError");
     JSVMInternalError_ctor = env->GetMethodID(JSVMInternalError_Class, "<init>",
@@ -94,11 +127,11 @@ void ::jsvm::initClassesAndFields(JNIEnv *env) {
 
     JSValue_Class = findClass(env, "me/ntrrgc/jsvm/JSValue");
     JSValue_type = env->GetFieldID(JSValue_Class, "type", "I");
-    JSValue_value = env->GetFieldID(JSValue_Class, "value", "L" "java/lang/Object;");
+    JSValue_value = env->GetFieldID(JSValue_Class, "value", "Ljava/lang/Object;");
 
     JSObject_Class = findClass(env, "me/ntrrgc/jsvm/JSObject");
     JSObject_ctor = env->GetMethodID(JSObject_Class, "<init>", "()V");
-    JSObject_jsVM = env->GetFieldID(JSObject_Class, "jsVM", "L" "me/ntrrgc/jsvm/JSVM;");
+    JSObject_jsVM = env->GetFieldID(JSObject_Class, "jsVM", "Lme/ntrrgc/jsvm/JSVM;");
     JSObject_handle = env->GetFieldID(JSObject_Class, "handle", "I");
 
     JSFunction_Class = findClass(env, "me/ntrrgc/jsvm/JSFunction");

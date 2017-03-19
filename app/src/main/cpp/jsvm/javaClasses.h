@@ -18,6 +18,22 @@ namespace jsvm {
 
     extern jclass       JSVM_Class;
     extern jfieldID     JSVM_hPriv;
+    extern jfieldID     JSVM_jsObjectsByHandle;
+    extern jfieldID     JSVM_deadJSObjectsRefs;
+
+    extern jclass       JSObjectWeakReference_Class;
+    extern jmethodID    JSObjectWeakReference_ctor;
+    extern jmethodID    JSObjectWeakReference_get;
+    extern jfieldID     JSObjectWeakReference_handle;
+
+    extern jclass       ArrayList_Class;
+    extern jmethodID    ArrayList_add;
+    extern jmethodID    ArrayList_get;
+    extern jmethodID    ArrayList_set;
+    extern jmethodID    ArrayList_size;
+
+    extern jclass       ReferenceQueue_Class;
+    extern jmethodID    ReferenceQueue_poll;
 
     extern jclass       JSVMInternalError_Class;
     extern jmethodID    JSVMInternalError_ctor;
@@ -42,6 +58,15 @@ namespace jsvm {
 
     extern jclass       JSFunction_Class;
     extern jmethodID    JSFunction_ctor;
+
+    class _JSObjectWeakReference: public _jobject {};
+    typedef _JSObjectWeakReference* JSObjectWeakReference;
+
+    class _ArrayList: public _jobject {};
+    typedef _ArrayList* ArrayList;
+
+    class _ReferenceQueue: public _jobject {};
+    typedef _ReferenceQueue* ReferenceQueue;
 
     void initClassesAndFields(JNIEnv *env);
     void tearDownClassesAndFields(JNIEnv *env);

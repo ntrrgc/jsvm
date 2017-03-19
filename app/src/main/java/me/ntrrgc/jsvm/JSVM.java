@@ -3,6 +3,10 @@ package me.ntrrgc.jsvm;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+
 /**
  * Created by ntrrgc on 1/14/17.
  */
@@ -27,9 +31,30 @@ public class JSVM {
     public static native void destroyLibrary();
 
     /**
-     * Native (duk_context *)
+     * JSVMPriv* (contains duk_context* and other implementation fields)
+     *
+     * Accessed from JNI.
      */
     private long hPriv;
+
+    /**
+     * Allows getting an existing JSObject from its handle.
+     * Weak references are used, so they can still be GC'ed.
+     *
+     * Accessed from JNI.
+     */
+    private ArrayList<JSObjectWeakReference> jsObjectsByHandle = new ArrayList<>();
+
+    /**
+     * When JSObjects are GCed, their {@link JSObjectWeakReference},
+     * which contain their handles, are put in this queue. The
+     * object book checks this queue in order to release JS object
+     * references (so their memory is reclaimed if also no references
+     * exist in JS code) and reuse handles.
+     *
+     * Accessed from JNI.
+     */
+    private ReferenceQueue<JSObject> deadJSObjectsRefs = new ReferenceQueue<>();
 
     /**
      * Synchronization monitor used so that two threads never

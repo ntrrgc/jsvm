@@ -159,3 +159,10 @@ jsvm::String_pushJString(JNIEnv *env, jstring string, duk_context *ctx) {
     env->ReleaseStringUTFChars(string, modifiedUtf8String);
 #endif
 }
+
+bool ::jsvm::checkLocalRefIsNotNullAndRelease(JNIEnv* env, jobject localRef) {
+    if (localRef) {
+        env->DeleteLocalRef(localRef);
+    }
+    return localRef != NULL;
+}

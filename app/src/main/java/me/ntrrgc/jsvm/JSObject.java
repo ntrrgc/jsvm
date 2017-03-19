@@ -1,10 +1,12 @@
 package me.ntrrgc.jsvm;
 
+import java.io.Closeable;
+
 /**
  * Created by ntrrgc on 1/15/17.
  */
 
-public class JSObject {
+public class JSObject implements Closeable {
     protected JSVM jsVM;
     protected int handle;
     private boolean aliveHandle = true;
@@ -71,7 +73,7 @@ public class JSObject {
     }
     private native String toStringNative(JSVM jsVM, int handle);
 
-    protected void finalize() {
+    public void close() {
         synchronized (jsVM.lock) {
             // If the entire VM was already destroyed in this
             // same GC cycle there is no point in trying to

@@ -47,7 +47,7 @@ namespace jsvm {
          *
          * Called by JSObject.finalizeNative()
          */
-        void finalizeJSObjectWithHandle(JNIEnv *env, _JSObject *jsObject,
+        void finalizeJSObjectWithHandle(JNIEnv *env,
                                         ObjectBook::handle_t handle);
 
         /**
@@ -64,8 +64,6 @@ namespace jsvm {
         static constexpr const char *const PRIVATE_PROPERTY_HANDLE = "\xffH";
         static constexpr const int PRIVATE_PROPERTY_HANDLE_LENGTH = 2;
 
-        std::vector<_JSObject*> m_jsObjectsByHandle;
-
         ObjectBook() : ctx(NULL), priv(NULL), m_nextFree(0) { }
         void lateInit(duk_context *ctx, JSVMPriv* priv);
 
@@ -74,15 +72,28 @@ namespace jsvm {
         FreeList m_freeList;
         handle_t m_nextFree;
 
-        handle_t allocateHandle();
+        /**
+         * Create or reuse a handle for a JSObject.
+         */
+        handle_t allocateHandle(JNIEnv* env);
 
+        /**
+         * Free a handle so that it can be reused.
+         */
         void deallocateHandle(handle_t handle);
+
+        /**
+         * Remove objects from the book whose java-land JSObject's
+         * have been GCed, so they can also be GCed in JS.
+         */
+        void gcDeadJSObjects(JNIEnv* env);
 
         /**
          * Save the created JSObject so that it can be reused if
          * the same JS object (and therefore handle) is requested later.
          */
-        void saveNewJSObjectWithHandle(JNIEnv *env, handle_t handle, _JSObject *jsObject);
+        void saveNewJSObjectWithHandle(JNIEnv *env, _JSObject *jsObject,
+                                       ObjectBook::handle_t handle);
 
         /**
          * Retrieve the latest JSObject that uses a certain handle
@@ -115,6 +126,14 @@ namespace jsvm {
          * top of the stack.
          */
         handle_t getStackTopObjectHandle();
+
+        /**
+         * Read the handle stored in the object at the top of the stack, if
+         * any and try to find a living JSObject wrapping it.
+         *
+         * @return The found JSObject, or null if not found.
+         */
+        _JSObject* getStackTopExistingJSObject(JNIEnv *env);
     };
 
 }

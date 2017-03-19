@@ -57,8 +57,7 @@ Java_me_ntrrgc_jsvm_JSObject_finalizeNative(JNIEnv *env, jobject instance, jobje
     JSVM jsVM = (JSVM) jsVM_;
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
 
-    priv->objectBook.finalizeJSObjectWithHandle(env, (JSObject) instance,
-                                                (ObjectBook::handle_t) handle);
+    priv->objectBook.finalizeJSObjectWithHandle(env, (ObjectBook::handle_t) handle);
 
 }
 
