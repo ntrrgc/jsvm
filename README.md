@@ -89,4 +89,4 @@ Duktape has not a bad API for a JS engine and it's quite powerful in fact... But
 
 # JSVM internals
 
-[You can find more about how JSVM works in the wiki.](wiki)
+[You can find more about how JSVM works in the wiki.](https://github.com/ntrrgc/jsvm/wiki)
