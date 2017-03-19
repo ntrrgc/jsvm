@@ -84,3 +84,7 @@ duk_pop_3(ctx);
 ```
 
 Duktape has not a bad API for a JS engine and it's quite powerful in fact... But it's just too low level to use directly in applications! The goal of JSVM is to wrap this complexity behind an application-friendly API, safe and easy to use.
+
+# JSVM internals
+
+[You can find more about how JSVM works in the wiki.](wiki)
