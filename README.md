@@ -1,5 +1,7 @@
 **Important:** This project is still under heavy development. Some features mentioned here are not yet implemented, some methods using are still missing and I've still not decided on a license. Still, I'm leaving this README here so that the purpose of the project can be understood.
 
+<hr/>
+
 JSVM is a library that exposes JavaScript to Java using the [Duktape engine](http://duktape.org/). Using JSVM you can evaluate JS snippets from Java and receive wrapped JS objects that you can use to call their methods, assign properties etc. all from Java.
 
 You can also expose Java objects to JS, enabling your JS code to call specific Java functions. Both ways of interaction can be combined easily in your code, so for instance you can invoke a JS function passing a Java callback as an argument.
