@@ -113,6 +113,13 @@ public class JSVM {
     }
     private native JSObject getGlobalScopeNative();
 
+    /**
+     * Create a new empty object inheriting from Object.
+     *
+     * This is similar to evaluating {} in JavaScript.
+     *
+     * @return The newly created object.
+     */
     @NotNull
     public JSObject newObject() {
         synchronized (this.lock) {
@@ -121,6 +128,15 @@ public class JSVM {
     }
     private native JSObject newObjectNative();
 
+    /**
+     * Create a new object with the specified prototype.
+     *
+     * This is similar to calling Object.create(proto) in JavaScript.
+     *
+     * @param proto The prototype for the new object. Passing a null here creates a bare object that
+     *              does not inherit from JavaScript's Object base class.
+     * @return The newly created object.
+     */
     @NotNull
     public JSObject newObjectWithProto(@Nullable JSObject proto) {
         synchronized (this.lock) {
