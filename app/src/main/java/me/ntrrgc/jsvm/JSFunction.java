@@ -7,11 +7,11 @@ import org.jetbrains.annotations.NotNull;
  */
 
 public final class JSFunction extends JSObject {
-    public JSValue invoke(JSValue... args) {
+    public JSValue invoke(@NotNull JSValue... args) {
         return call(JSValue.aNull(), args);
     }
 
-    public JSValue call(JSValue thisArg, JSValue... args) {
+    public JSValue call(@NotNull JSValue thisArg, @NotNull JSValue... args) {
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
             return callNative(jsVM, handle, thisArg, args);
