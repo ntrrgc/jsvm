@@ -14,20 +14,20 @@ Simple usage evaluating expressions:
 
 ```java
 JSVM jsvm = new JSVM();
-int result = jsvm.eval("2 + 5").asInt();
+int result = jsvm.evaluate("2 + 5").asInt();
 ```
 
 You can also use `eval()` to load libraries. Variables are persisted between `eval()` calls.
 
 ```java
 JSVM jsvm = new JSVM();
-jsvm.eval(fileRead("pokedex.js"));
+jsvm.evaluate(fileRead("pokedex.js"));
 
-jsvm.eval("var pokedex = new Pokedex();"
+jsvm.evaluate("var pokedex = new Pokedex();"
 	+ "var lapras = pokedex.pokemon('lapras')");
 
-System.out.printf("Name: %s\n", jsvm.eval("lapras.name").asString());
-System.out.printf("Weight: %d\n", jsvm.eval("lapras.weight").asDouble());
+System.out.printf("Name: %s\n", jsvm.evaluate("lapras.name").asString());
+System.out.printf("Weight: %d\n", jsvm.evaluate("lapras.weight").asDouble());
 ```
 
 What if the pokemon name was specified by the user? **Concatenating user input into anything called eval is always a terrible idea!** Luckily JSVM does not force us to. In fact, JSVM allows us to manipulate every possible JS object from Java without it! No JS compilation needed, just Java methods!
