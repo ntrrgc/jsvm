@@ -34,27 +34,27 @@ public class JSFunctionTests {
 
     @Test
     public void evalSimpleFunction() throws Exception {
-        JSFunction jsFunction = jsvm.evaluateScript("(function hello() { return 'Hello world'; })").asFunction();
+        JSFunction jsFunction = jsvm.evaluate("(function hello() { return 'Hello world'; })").asFunction();
         JSValue ret = jsFunction.call(JSValue.aNull());
         assertEquals("Hello world", ret.asString());
     }
 
     @Test
     public void evalMathFunction() throws Exception {
-        JSFunction jsFunction = jsvm.evaluateScript("(function sum(a, b) { return a + b; })").asFunction();
+        JSFunction jsFunction = jsvm.evaluate("(function sum(a, b) { return a + b; })").asFunction();
         JSValue ret = jsFunction.call(JSValue.aNull(), JSValue.aNumber(10), JSValue.aNumber(20));
         assertEquals(30, ret.asInt());
     }
 
     @Test
     public void functionToString() throws Exception {
-        JSFunction jsFunction = jsvm.evaluateScript("(function hello() { return 'Hello world'; })").asFunction();
+        JSFunction jsFunction = jsvm.evaluate("(function hello() { return 'Hello world'; })").asFunction();
         assertEquals("function hello() { [ecmascript code] }", jsFunction.toString());
     }
 
     @Test
     public void functionAsObject() throws Exception {
-        JSFunction jsFunction = jsvm.evaluateScript("(function hello() { return 'Hello world'; })").asFunction();
+        JSFunction jsFunction = jsvm.evaluate("(function hello() { return 'Hello world'; })").asFunction();
         jsFunction.set("hi", JSValue.aString("hello"));
         assertEquals("hello", jsFunction.get("hi").asString());
     }

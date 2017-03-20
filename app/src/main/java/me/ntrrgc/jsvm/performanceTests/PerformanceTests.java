@@ -13,7 +13,7 @@ import me.ntrrgc.jsvm.performanceTests.controlGroup.DummyPOJO;
 
 public class PerformanceTests {
     private JSObject createDummyJSObject(JSVM jsVM, double value) {
-        JSObject object = jsVM.evaluateScript("({0: 1})").asObjectOrNull();
+        JSObject object = jsVM.evaluate("({0: 1})").asObjectOrNull();
         assert object != null;
         object.set(0, JSValue.aNumber(value));
         return object;

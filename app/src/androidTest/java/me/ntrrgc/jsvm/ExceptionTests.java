@@ -29,7 +29,7 @@ public class ExceptionTests {
     public void testUnhandledErrorsThrow() throws Exception {
         boolean threw = false;
         try {
-            jsvm.evaluateScript("throw new Error('oops!');");
+            jsvm.evaluate("throw new Error('oops!');");
         } catch (JSError error) {
             threw = true;
             assertEquals(0, jsvm.getStackSize());
@@ -50,7 +50,7 @@ public class ExceptionTests {
     public void testUnhandledErrorsInsideFunctionThrow() throws Exception {
         boolean threw = false;
         try {
-            jsvm.evaluateScript("function hello() { throw new Error('oops!'); } hello();");
+            jsvm.evaluate("function hello() { throw new Error('oops!'); } hello();");
         } catch (JSError error) {
             threw = true;
             assertEquals(0, jsvm.getStackSize());

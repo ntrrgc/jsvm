@@ -55,13 +55,13 @@ public class JSObjectIdentityRace {
 
     @Test
     public void testNoRaceConditions() throws Exception {
-        jsvm.evaluateScript("jsThing = {};");
+        jsvm.evaluate("jsThing = {};");
 
-        int handleFirst = getJSObjectHandle(jsvm.evaluateScript("jsThing").asObject());
+        int handleFirst = getJSObjectHandle(jsvm.evaluate("jsThing").asObject());
 
         hopeForGC();
 
-        int handleSecond = getJSObjectHandle(jsvm.evaluateScript("jsThing").asObject());
+        int handleSecond = getJSObjectHandle(jsvm.evaluate("jsThing").asObject());
 
         assertEquals(handleFirst, handleSecond);
     }

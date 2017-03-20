@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 //        JSVM jsvm = new JSVM();
-//        JSValue v = jsvm.evaluateScript("'Hello from' + ' JS'");
+//        JSValue v = jsvm.evaluate("'Hello from' + ' JS'");
 //        Log.i("OKA", String.valueOf(v.jsVM == jsvm));
 //        tv.setText(v.asStringOrNull());
 
@@ -31,10 +31,10 @@ public class MainActivity extends AppCompatActivity {
 //        } catch (IOException e) {
 //            e.printStackTrace();
 //        }
-//        jsvm.evaluateScript("function setTimeout() {}");
+//        jsvm.evaluate("function setTimeout() {}");
 //
 //        Long a = System.currentTimeMillis();
-//        jsvm.evaluateScript(bluebird);
+//        jsvm.evaluate(bluebird);
 //        Long b = System.currentTimeMillis();
 //        Log.i("BLUEBIRD", "Loaded in " + (b - a) + " ms");
     }

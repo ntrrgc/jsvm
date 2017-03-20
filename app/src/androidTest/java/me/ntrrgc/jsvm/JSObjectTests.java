@@ -31,7 +31,7 @@ public class JSObjectTests {
 
     @Test
     public void testReadProperties() throws Exception {
-        JSObject obj = jsvm.evaluateScript("({x: 5, 1: 'one'})").asObjectOrNull();
+        JSObject obj = jsvm.evaluate("({x: 5, 1: 'one'})").asObjectOrNull();
         assertNotNull(obj);
 
         assertTrue(obj.contains("x"));
@@ -47,7 +47,7 @@ public class JSObjectTests {
 
     @Test
     public void testWriteProperties() throws Exception {
-        JSObject obj = jsvm.evaluateScript("({})").asObjectOrNull();
+        JSObject obj = jsvm.evaluate("({})").asObjectOrNull();
         assertNotNull(obj);
 
         obj.set("x", JSValue.aNumber(5));
@@ -66,9 +66,9 @@ public class JSObjectTests {
 
     @Test
     public void testWriteNestedObjects() throws Exception {
-        JSObject nodeA = jsvm.evaluateScript("({value: 0, next: null})").asObjectOrNull();
+        JSObject nodeA = jsvm.evaluate("({value: 0, next: null})").asObjectOrNull();
         assertNotNull(nodeA);
-        JSObject nodeB = jsvm.evaluateScript("({value: 1, next: null})").asObjectOrNull();
+        JSObject nodeB = jsvm.evaluate("({value: 1, next: null})").asObjectOrNull();
         assertNotNull(nodeB);
 
         nodeA.set("next", JSValue.anObject(nodeB));
@@ -80,11 +80,11 @@ public class JSObjectTests {
 
     @Test
     public void crossingVMsThrows() throws Exception {
-        JSObject obj = jsvm.evaluateScript("({})").asObjectOrNull();
+        JSObject obj = jsvm.evaluate("({})").asObjectOrNull();
         assertNotNull(obj);
 
         JSVM anotherVM = new JSVM();
-        JSObject foreignThingy = anotherVM.evaluateScript("({})").asObjectOrNull();
+        JSObject foreignThingy = anotherVM.evaluate("({})").asObjectOrNull();
         assertNotNull(foreignThingy);
 
         boolean caught = false;
@@ -100,7 +100,7 @@ public class JSObjectTests {
 
     @Test
     public void functionsAreObjects() throws Exception {
-        JSObject fun = jsvm.evaluateScript("(function hello() { return 'Hi'; })").asObjectOrNull();
+        JSObject fun = jsvm.evaluate("(function hello() { return 'Hi'; })").asObjectOrNull();
         assertNotNull(fun);
 
         assertEquals("hello", fun.get("name").asStringOrNull());
@@ -115,8 +115,8 @@ public class JSObjectTests {
 
         assertTrue(obj.contains("hasOwnProperty"));
         assertTrue(obj.contains("toString"));
-        assertEquals(obj.get("__proto__").asObject(), jsvm.evaluateScript("({}.__proto__)").asObject());
-        assertSame(obj.get("__proto__").asObject(), jsvm.evaluateScript("({}.__proto__)").asObject());
+        assertEquals(obj.get("__proto__").asObject(), jsvm.evaluate("({}.__proto__)").asObject());
+        assertSame(obj.get("__proto__").asObject(), jsvm.evaluate("({}.__proto__)").asObject());
     }
 
     @Test

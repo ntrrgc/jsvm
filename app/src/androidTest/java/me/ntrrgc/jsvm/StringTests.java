@@ -22,7 +22,7 @@ public class StringTests {
     @Before
     public void setUp() {
         jsvm = new JSVM();
-        tester = jsvm.evaluateScript("var tester = {" +
+        tester = jsvm.evaluate("var tester = {" +
                 "string: '', " +
                 "get length() { return this.string.length; }" +
                 "}; tester").asObject();
@@ -42,7 +42,7 @@ public class StringTests {
 
     @Test
     public void testSnowmanFromJS() throws Exception {
-        assertEquals("☃", jsvm.evaluateScript("'☃'").asString());
+        assertEquals("☃", jsvm.evaluate("'☃'").asString());
     }
 
     @Test
@@ -54,22 +54,22 @@ public class StringTests {
 
     @Test
     public void testAcutesFromJS() throws Exception {
-        assertEquals("Lucía", jsvm.evaluateScript("'Lucía'").asString());
+        assertEquals("Lucía", jsvm.evaluate("'Lucía'").asString());
     }
 
     @Test
     public void testCatGrinningFromJS() throws Exception {
-        assertEquals("\uD83D\uDE3A", jsvm.evaluateScript("'\\uD83D\\uDE3A'").asString());
+        assertEquals("\uD83D\uDE3A", jsvm.evaluate("'\\uD83D\\uDE3A'").asString());
     }
 
     @Test
     public void testCatGrinningInJS() throws Exception {
-        assertEquals(2, jsvm.evaluateScript("('\\uD83D\\uDE3A').length").asInt());
+        assertEquals(2, jsvm.evaluate("('\\uD83D\\uDE3A').length").asInt());
     }
 
     @Test
     public void testCatGrinningAsObjectKeyFromJS() throws Exception {
-        JSObject obj = jsvm.evaluateScript("({'\\uD83D\\uDE3A': 'value'})").asObject();
+        JSObject obj = jsvm.evaluate("({'\\uD83D\\uDE3A': 'value'})").asObject();
         assertEquals("value", obj.get("\uD83D\uDE3A").asString());
     }
 
@@ -77,12 +77,12 @@ public class StringTests {
     public void testCatGrinningAsObjectKeyFromJava() throws Exception {
         tester.set("\uD83D\uDE3A", JSValue.aString("value"));
         assertEquals("value", tester.get("\uD83D\uDE3A").asString());
-        assertEquals("value", jsvm.evaluateScript("tester['\\uD83D\\uDE3A']").asString());
+        assertEquals("value", jsvm.evaluate("tester['\\uD83D\\uDE3A']").asString());
     }
 
     @Test
     public void testEmbeddedNullsInObjectKeyFromJS() throws Exception {
-        JSObject obj = jsvm.evaluateScript("({'a\\u0000b': 'value'})").asObject();
+        JSObject obj = jsvm.evaluate("({'a\\u0000b': 'value'})").asObject();
         assertEquals("value", obj.get("a\u0000b").asString());
     }
 
@@ -90,7 +90,7 @@ public class StringTests {
     public void testEmbeddedNullsInObjectKeyFromJava() throws Exception {
         tester.set("a\u0000b", JSValue.aString("value"));
         assertEquals("value", tester.get("a\u0000b").asString());
-        assertEquals("value", jsvm.evaluateScript("tester['a\\u0000b']").asString());
+        assertEquals("value", jsvm.evaluate("tester['a\\u0000b']").asString());
     }
 
     @Test
@@ -102,7 +102,7 @@ public class StringTests {
 
     @Test
     public void testEmbeddedNullsFromJS() throws Exception {
-        assertEquals("a\u0000b", jsvm.evaluateScript("'a\\u0000b'").asString());
+        assertEquals("a\u0000b", jsvm.evaluate("'a\\u0000b'").asString());
     }
 
     @Test

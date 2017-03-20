@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.ReferenceQueue;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 /**
@@ -71,12 +70,12 @@ public class JSVM {
         nativeInit();
     }
 
-    public JSValue evaluateScript(String code) {
+    public JSValue evaluate(String code) {
         synchronized (this.lock) {
-            return evaluateScriptNative(code);
+            return evaluateNative(code);
         }
     }
-    private native JSValue evaluateScriptNative(String code);
+    private native JSValue evaluateNative(String code);
 
     /* package */ boolean finalized = false;
     protected void finalize() {

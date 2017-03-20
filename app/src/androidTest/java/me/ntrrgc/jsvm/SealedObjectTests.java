@@ -37,7 +37,7 @@ public class SealedObjectTests {
 
     @Test
     public void testSealed() throws Exception {
-        JSObject result = jsvm.evaluateScript("Object.seal({x: 2})").asObject();
+        JSObject result = jsvm.evaluate("Object.seal({x: 2})").asObject();
 
         assertEquals(2, result.get("x").asInt());
 
@@ -55,7 +55,7 @@ public class SealedObjectTests {
 
     @Test
     public void testFrozen() throws Exception {
-        JSObject result = jsvm.evaluateScript("Object.freeze({x: 2})").asObject();
+        JSObject result = jsvm.evaluate("Object.freeze({x: 2})").asObject();
 
         assertEquals(2, result.get("x").asInt());
 
