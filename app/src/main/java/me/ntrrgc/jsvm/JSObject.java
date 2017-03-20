@@ -1,5 +1,7 @@
 package me.ntrrgc.jsvm;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.Closeable;
 
 /**
@@ -64,6 +66,11 @@ public class JSObject implements Closeable {
         }
     }
     private native boolean containsByIndexNative(JSVM jsVM, int handle, int index);
+
+    public JSValue invokeMethod(@NotNull String methodName, @NotNull JSValue... args) {
+        JSFunction methodFunction = this.get(methodName).asFunction();
+        return methodFunction.call(JSValue.anObject(this), args);
+    }
 
     public String toString() {
         synchronized (jsVM.lock) {

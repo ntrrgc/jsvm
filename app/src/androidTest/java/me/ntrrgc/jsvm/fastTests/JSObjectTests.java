@@ -144,4 +144,20 @@ public class JSObjectTests {
         assertEquals("hello", child.get("hi").asString());
         assertSame(parent, child.get("__proto__").asObject());
     }
+
+    @Test
+    public void testMethods() throws Exception {
+        JSObject obj = jsvm.evaluate("" +
+                "function Adder() {\n" +
+                "   this.total = 0;\n" +
+                "}\n" +
+                "Adder.prototype.add = function (quantity) {\n" +
+                "   this.total += quantity;\n" +
+                "};\n" +
+                "new Adder()").asObject();
+
+        obj.invokeMethod("add", JSValue.aNumber(2));
+        obj.invokeMethod("add", JSValue.aNumber(3));
+        assertEquals(5, obj.get("total").asInt());
+    }
 }
