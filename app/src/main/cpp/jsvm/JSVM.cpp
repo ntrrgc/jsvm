@@ -97,6 +97,26 @@ Java_me_ntrrgc_jsvm_JSVM_getStackSizeNative(JNIEnv *env, jobject instance) {
 
 }
 
+JNIEXPORT jobject JNICALL
+Java_me_ntrrgc_jsvm_JSVM_getGlobalScopeNative(JNIEnv *env, jobject instance) {
+
+    JSVM jsVM = (JSVM) instance;
+    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+
+    return JSVMPriv_invokeSafe<JSObject>(priv, [priv, env, jsVM] (duk_context *ctx) {
+
+        // Push global object
+        duk_push_global_object(ctx);
+
+        JSObject ret = priv->objectBook.exposeObject(env, -1);
+
+        // Restore stack
+        duk_pop(ctx); // object
+
+        return ret;
+
+    });
+}
 
 JNIEXPORT jobject JNICALL
 Java_me_ntrrgc_jsvm_JSVM_newObjectNative(JNIEnv *env, jobject instance) {

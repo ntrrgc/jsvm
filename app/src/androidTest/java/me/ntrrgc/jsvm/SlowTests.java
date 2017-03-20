@@ -32,7 +32,7 @@ public class SlowTests {
     @Test
     public void testLotsOfSmallObjects() throws Exception {
         jsvm.evaluateScript("function getObject() { return {'x': 2 }; }");
-        JSFunction getObject = jsvm.evaluateScript("getObject").asFunction();
+        JSFunction getObject = jsvm.getGlobalScope().get("getObject").asFunction();
 
         for (long i = 0; i < 400000L; i++) {
             getObject.invoke();

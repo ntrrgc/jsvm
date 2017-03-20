@@ -101,6 +101,19 @@ public class JSVM {
     }
     private native int getStackSizeNative();
 
+    /**
+     * Get the object backing the global scope, where global variables are stored.
+     *
+     * @return the JS object backing the global scope.
+     */
+    @NotNull
+    public JSObject getGlobalScope() {
+        synchronized (this.lock) {
+            return this.getGlobalScopeNative();
+        }
+    }
+    private native JSObject getGlobalScopeNative();
+
     @NotNull
     public JSObject newObject() {
         synchronized (this.lock) {
