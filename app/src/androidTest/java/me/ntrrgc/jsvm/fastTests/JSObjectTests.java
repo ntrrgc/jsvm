@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import me.ntrrgc.jsvm.AttemptedToUseObjectFromOtherVM;
+import me.ntrrgc.jsvm.InvalidJSValueType;
 import me.ntrrgc.jsvm.JSObject;
 import me.ntrrgc.jsvm.JSVM;
 import me.ntrrgc.jsvm.JSValue;
@@ -159,5 +160,17 @@ public class JSObjectTests {
         obj.invokeMethod("add", JSValue.aNumber(2));
         obj.invokeMethod("add", JSValue.aNumber(3));
         assertEquals(5, obj.get("total").asInt());
+    }
+
+    @Test
+    public void testNonExistentMethod() throws Exception {
+        JSObject obj = jsvm.newObject();
+
+        try {
+            obj.invokeMethod("add", JSValue.aNumber(2));
+            fail();
+        } catch (InvalidJSValueType error) {
+            assertEquals("function was expected but undefined was found.", error.getMessage());
+        }
     }
 }
