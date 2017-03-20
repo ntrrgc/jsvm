@@ -9,6 +9,9 @@ import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 
+import me.ntrrgc.jsvm.JSObject;
+import me.ntrrgc.jsvm.JSVM;
+
 import static org.junit.Assert.assertEquals;
 
 @RunWith(AndroidJUnit4.class)

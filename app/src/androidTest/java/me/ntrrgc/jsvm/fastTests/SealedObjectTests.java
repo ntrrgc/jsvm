@@ -1,4 +1,4 @@
-package me.ntrrgc.jsvm;
+package me.ntrrgc.jsvm.fastTests;
 
 import android.support.test.runner.AndroidJUnit4;
 
@@ -6,6 +6,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import me.ntrrgc.jsvm.JSError;
+import me.ntrrgc.jsvm.JSObject;
+import me.ntrrgc.jsvm.JSVM;
+import me.ntrrgc.jsvm.JSValue;
 
 import static junit.framework.Assert.assertSame;
 import static org.junit.Assert.assertEquals;
