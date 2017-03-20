@@ -12,6 +12,15 @@ public final class JSFunction extends JSObject {
     }
 
     public JSValue call(@NotNull JSValue thisArg, @NotNull JSValue... args) {
+        if (thisArg == null || args == null) {
+            throw new IllegalArgumentException("Passed raw null pointer to JSFunction.call() instead of JSValue. Use JSValue.aNull() instead.");
+        }
+        for (JSValue arg : args) {
+            if (arg == null) {
+                throw new IllegalArgumentException("Passed raw null pointer to JSFunction.call() instead of JSValue. Use JSValue.aNull() instead.");
+            }
+        }
+
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
             return callNative(jsVM, handle, thisArg, args);
