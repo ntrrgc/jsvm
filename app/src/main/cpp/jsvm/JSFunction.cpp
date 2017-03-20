@@ -47,4 +47,38 @@ Java_me_ntrrgc_jsvm_JSFunction_callNative(JNIEnv *env, jobject instance, jobject
 
 }
 
+JNIEXPORT jobject JNICALL
+Java_me_ntrrgc_jsvm_JSFunction_callNewNative(JNIEnv *env, jobject instance, jobject jsVM_, jint handle,
+                                             jobjectArray args) {
+
+    JSVM jsVM = (JSVM) jsVM_;
+    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+
+    return JSVMPriv_invokeSafe<JSValue>(priv, [priv, env, jsVM, handle, args] (duk_context *ctx) {
+
+        // Push the function
+        priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
+
+        // Push arguments
+        const jint numArgs = env->GetArrayLength(args);
+        for (jint i = 0; i < numArgs; i++) {
+            JSValue arg = (JSValue) env->GetObjectArrayElement(args, i);
+            JSValue_push(env, arg, ctx);
+        }
+
+        // Invoke the function with new
+        duk_new(ctx, numArgs);
+
+        // Retrieve the return value
+        JSValue ret = JSValue_createFromStack(env, jsVM, -1);
+
+        // Restore stack
+        duk_pop(ctx); // return value
+
+        return ret;
+
+    });
+
+}
+
 };

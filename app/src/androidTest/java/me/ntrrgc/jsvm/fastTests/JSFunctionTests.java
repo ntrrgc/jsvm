@@ -8,6 +8,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import me.ntrrgc.jsvm.JSFunction;
+import me.ntrrgc.jsvm.JSObject;
 import me.ntrrgc.jsvm.JSVM;
 import me.ntrrgc.jsvm.JSValue;
 
@@ -61,6 +62,27 @@ public class JSFunctionTests {
         JSFunction jsFunction = jsvm.evaluate("(function hello() { return 'Hello world'; })").asFunction();
         jsFunction.set("hi", JSValue.aString("hello"));
         assertEquals("hello", jsFunction.get("hi").asString());
+    }
+
+    @Test
+    public void testConstructor() throws Exception {
+        JSFunction Dog = jsvm.evaluate("(function Dog(name) { this.name = name; })").asFunction();
+        JSObject dog = Dog.callNew(JSValue.aString("Seymour Asses")).asObject();
+        assertEquals("Seymour Asses", dog.get("name").asString());
+    }
+
+    @Test
+    public void testShortCircuitedConstructor() throws Exception {
+        JSFunction Dog = jsvm.evaluate("var staticDog = {name: 'Beethoven'};" +
+                "(function Dog() { return staticDog; })").asFunction();
+
+        JSObject dog = Dog.callNew().asObject();
+        // the static dog is returned
+        assertEquals("Beethoven", dog.get("name").asString());
+
+        // always returns the same instance
+        JSObject dogAgain = Dog.callNew().asObject();
+        assertEquals(dog, dogAgain);
     }
 
 }
