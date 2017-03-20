@@ -16,7 +16,6 @@ import static org.junit.Assert.assertEquals;
 @RunWith(AndroidJUnit4.class)
 public class SlowTests {
     private JSVM jsvm;
-    private JSObject tester;
 
     @Before
     public void setUp() {
