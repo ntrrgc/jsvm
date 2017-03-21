@@ -4,7 +4,7 @@ package me.ntrrgc.jsvm.accessorChains;
  * Created by ntrrgc on 3/21/17.
  */
 
-public class ClassChainRoot extends AccessorChainRoot {
+public final class ClassChainRoot extends AccessorChainRoot {
     public final String className;
 
     public ClassChainRoot(String className) {
