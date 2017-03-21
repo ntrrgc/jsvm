@@ -114,7 +114,7 @@ public class JSVM {
     public JSObject getGlobalScope() {
         synchronized (this.lock) {
             return this.getGlobalScopeNative()
-                    .lateInitAccessorChain(new GlobalScopeChainRoot());
+                    .lateInitAccessorChain(GlobalScopeChainRoot.INSTANCE);
         }
     }
     private native JSObject getGlobalScopeNative();

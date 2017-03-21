@@ -5,6 +5,12 @@ package me.ntrrgc.jsvm.accessorChains;
  */
 
 public class GlobalScopeChainRoot extends AccessorChainRoot {
+    protected GlobalScopeChainRoot() {
+        super();
+    }
+
+    public static GlobalScopeChainRoot INSTANCE = new GlobalScopeChainRoot();
+
     @Override
     public String getFullPath() {
         return "global";
