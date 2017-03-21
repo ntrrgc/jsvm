@@ -211,7 +211,7 @@ public final class JSValue {
         if (value != null) {
             return value;
         } else {
-            throw new InvalidJSValueType(getTypeAsString(TYPE_BOOLEAN), getTypeAsString(type), this);
+            throw new JSTypeError(getTypeAsString(TYPE_BOOLEAN), getTypeAsString(type), this);
         }
     }
 
@@ -221,7 +221,7 @@ public final class JSValue {
         if (value != null) {
             return value;
         } else {
-            throw new InvalidJSValueType(getTypeAsString(TYPE_NUMBER), getTypeAsString(type), this);
+            throw new JSTypeError(getTypeAsString(TYPE_NUMBER), getTypeAsString(type), this);
         }
     }
 
@@ -231,7 +231,7 @@ public final class JSValue {
         if (value != null) {
             return value;
         } else {
-            throw new InvalidJSValueType(getTypeAsString(TYPE_NUMBER), getTypeAsString(type), this);
+            throw new JSTypeError(getTypeAsString(TYPE_NUMBER), getTypeAsString(type), this);
         }
     }
 
@@ -241,7 +241,7 @@ public final class JSValue {
         if (value != null) {
             return value;
         } else {
-            throw new InvalidJSValueType(getTypeAsString(TYPE_NUMBER), getTypeAsString(type), this);
+            throw new JSTypeError(getTypeAsString(TYPE_NUMBER), getTypeAsString(type), this);
         }
     }
 
@@ -252,7 +252,7 @@ public final class JSValue {
         if (value != null) {
             return value;
         } else {
-            throw new InvalidJSValueType(getTypeAsString(TYPE_STRING), getTypeAsString(type), this);
+            throw new JSTypeError(getTypeAsString(TYPE_STRING), getTypeAsString(type), this);
         }
     }
 
@@ -263,7 +263,7 @@ public final class JSValue {
         if (value != null) {
             return value;
         } else {
-            throw new InvalidJSValueType(getTypeAsString(TYPE_OBJECT), getTypeAsString(type), this);
+            throw new JSTypeError(getTypeAsString(TYPE_OBJECT), getTypeAsString(type), this);
         }
     }
 
@@ -274,7 +274,7 @@ public final class JSValue {
         if (jsFunction != null) {
             return jsFunction;
         } else {
-            throw new InvalidJSValueType("function", getTypeAsString(type), this);
+            throw new JSTypeError("function", getTypeAsString(type), this);
         }
     }
 

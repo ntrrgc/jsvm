@@ -8,7 +8,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import me.ntrrgc.jsvm.AttemptedToUseObjectFromOtherVM;
-import me.ntrrgc.jsvm.InvalidJSValueType;
 import me.ntrrgc.jsvm.JSObject;
 import me.ntrrgc.jsvm.JSVM;
 import me.ntrrgc.jsvm.JSValue;

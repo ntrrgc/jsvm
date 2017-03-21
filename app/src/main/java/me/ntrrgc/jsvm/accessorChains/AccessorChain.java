@@ -1,10 +1,10 @@
 package me.ntrrgc.jsvm.accessorChains;
 
-import me.ntrrgc.jsvm.InvalidJSValueType;
+import me.ntrrgc.jsvm.JSTypeError;
 
 /**
  * A linked list of instances of this class is used to construct useful accessor chains
- * for {@link InvalidJSValueType} errors.
+ * for {@link JSTypeError} errors.
  *
  * An accessor is either a property or a method, represented in accessorString as "myProp" or
  * "getMyProp()". Traversing these nodes and joining strings backwards allows you to recover

@@ -6,7 +6,7 @@ package me.ntrrgc.jsvm;
  *
  * Created by ntrrgc on 1/23/17.
  */
-public class InvalidJSValueType extends AssertionError {
+public class JSTypeError extends AssertionError {
     public final JSValue value;
 
     private static String getMessagePrefix(JSValue value) {
@@ -17,7 +17,7 @@ public class InvalidJSValueType extends AssertionError {
         }
     }
 
-    InvalidJSValueType(String expectedType, String actualType, JSValue value) {
+    JSTypeError(String expectedType, String actualType, JSValue value) {
         super(getMessagePrefix(value) + expectedType + " was expected but " + actualType + " was found.");
         this.value = value;
     }

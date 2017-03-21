@@ -1,6 +1,5 @@
 package me.ntrrgc.jsvm;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -118,7 +117,7 @@ public class JSObject implements Closeable {
 
     /**
      * Attempts to get the name of the constructor function (or class) this object was constructed
-     * from. This is done by reading .constructor.name. The {@link InvalidJSValueType} error
+     * from. This is done by reading .constructor.name. The {@link JSTypeError} error
      * uses this method to extract useful class names.
      *
      * This will fail for bare objects created with Object.create(null) or objects where those

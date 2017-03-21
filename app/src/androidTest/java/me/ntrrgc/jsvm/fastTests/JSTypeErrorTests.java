@@ -7,9 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import me.ntrrgc.jsvm.AttemptedToUseObjectFromOtherVM;
-import me.ntrrgc.jsvm.InvalidJSValueType;
-import me.ntrrgc.jsvm.JSFunction;
+import me.ntrrgc.jsvm.JSTypeError;
 import me.ntrrgc.jsvm.JSObject;
 import me.ntrrgc.jsvm.JSVM;
 import me.ntrrgc.jsvm.JSValue;
@@ -48,7 +46,7 @@ public class JSTypeErrorTests {
         try {
             obj.invokeMethod("add", JSValue.aNumber(2));
             fail();
-        } catch (InvalidJSValueType error) {
+        } catch (JSTypeError error) {
             assertEquals("In Object:add, function was expected but undefined was found.", error.getMessage());
         }
     }
@@ -60,7 +58,7 @@ public class JSTypeErrorTests {
         try {
             obj.invokeMethod("add", JSValue.aNumber(2));
             fail();
-        } catch (InvalidJSValueType error) {
+        } catch (JSTypeError error) {
             assertEquals("In <unknown object>:add, function was expected but undefined was found.", error.getMessage());
         }
     }
@@ -72,7 +70,7 @@ public class JSTypeErrorTests {
         try {
             obj.invokeMethod("add", JSValue.aNumber(2));
             fail();
-        } catch (InvalidJSValueType error) {
+        } catch (JSTypeError error) {
             assertEquals("In [eval expression].add, function was expected but undefined was found.", error.getMessage());
         }
     }
@@ -92,7 +90,7 @@ public class JSTypeErrorTests {
                     .get("c").asObject()
                     .get("d").asObject();
             fail();
-        } catch (InvalidJSValueType error) {
+        } catch (JSTypeError error) {
             assertEquals("In getNestedStructure().a.b[0].c.d, object was expected but undefined was found.",
                     error.getMessage());
         }
@@ -111,7 +109,7 @@ public class JSTypeErrorTests {
                     .get("c").asObject()
                     .get("d").asObject();
             fail();
-        } catch (InvalidJSValueType error) {
+        } catch (JSTypeError error) {
             assertEquals("In getNestedStructure().a.b[0].c.d, object was expected but undefined was found.",
                     error.getMessage());
         }
@@ -131,7 +129,7 @@ public class JSTypeErrorTests {
                 array = array.get(i).asObject();
             }
             fail();
-        } catch (InvalidJSValueType error) {
+        } catch (JSTypeError error) {
             // It should fail when attempting to read the element with index 10.
             // The accessor chain only extends up to 8 levels
             assertEquals("In strangeArrayThatPointsToItself[2][3][4][5][6][7]...[10], object was expected but undefined was found.",
@@ -146,7 +144,7 @@ public class JSTypeErrorTests {
                     .callNew().asObject()
                     .get("nonexistent").asInt();
             fail();
-        } catch (InvalidJSValueType error) {
+        } catch (JSTypeError error) {
             assertEquals("In new (Object)().nonexistent, number was expected but undefined was found.",
                     error.getMessage());
         }
@@ -162,7 +160,7 @@ public class JSTypeErrorTests {
                     .callNew().asObject()
                     .get("nonexistent").asInt();
             fail();
-        } catch (InvalidJSValueType error) {
+        } catch (JSTypeError error) {
             assertEquals("In new (obj.ctor)().nonexistent, number was expected but undefined was found.",
                     error.getMessage());
         }
@@ -173,7 +171,7 @@ public class JSTypeErrorTests {
         try {
             jsvm.getGlobalScope().get(3).asDouble();
             fail();
-        } catch (InvalidJSValueType error) {
+        } catch (JSTypeError error) {
             assertEquals("In global[3], number was expected but undefined was found.",
                     error.getMessage());
         }
@@ -187,7 +185,7 @@ public class JSTypeErrorTests {
             jsvm.newObjectWithProto(MyClassPrototype)
                     .get(3).asInt();
             fail();
-        } catch (InvalidJSValueType error) {
+        } catch (JSTypeError error) {
             assertEquals("In MyClass:[3], number was expected but undefined was found.",
                     error.getMessage());
         }
