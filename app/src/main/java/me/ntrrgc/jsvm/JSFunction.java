@@ -4,6 +4,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.ReferenceQueue;
 
+import me.ntrrgc.jsvm.accessorChains.CallAccessor;
+import me.ntrrgc.jsvm.accessorChains.NewCallAccessor;
+
 /**
  * Created by ntrrgc on 1/24/17.
  */
@@ -44,7 +47,8 @@ public final class JSFunction extends JSObject {
 
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
-            return callNative(jsVM, handle, thisArg, args);
+            return callNative(jsVM, handle, thisArg, args)
+                    .lateInitAccessorChain(new CallAccessor(accessorChain));
         }
     }
     private native JSValue callNative(JSVM jsVM, int handle, JSValue thisArg, JSValue[] args);
@@ -66,7 +70,8 @@ public final class JSFunction extends JSObject {
 
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
-            return callNewNative(jsVM, handle, args);
+            return callNewNative(jsVM, handle, args)
+                    .lateInitAccessorChain(new NewCallAccessor(accessorChain));
         }
     }
     private native JSValue callNewNative(JSVM jsVM, int handle, JSValue[] args);

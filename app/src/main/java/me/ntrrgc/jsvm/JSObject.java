@@ -1,8 +1,14 @@
 package me.ntrrgc.jsvm;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
+
+import me.ntrrgc.jsvm.accessorChains.AccessorChain;
+import me.ntrrgc.jsvm.accessorChains.IndexAccessor;
+import me.ntrrgc.jsvm.accessorChains.PropertyAccessor;
 
 /**
  * Created by ntrrgc on 1/15/17.
@@ -13,6 +19,16 @@ public class JSObject implements Closeable {
     protected int handle;
     private boolean aliveHandle = true;
 
+    protected AccessorChain accessorChain;
+
+    @NotNull
+    JSObject lateInitAccessorChain(@NotNull AccessorChain accessorChain) {
+        // Note: may be initialized more than once if the same object is retrieved in several ways.
+        // The latest one persists.
+        this.accessorChain = accessorChain;
+        return this;
+    }
+
     protected boolean isStillAlive() {
         return aliveHandle && !jsVM.finalized;
     }
@@ -22,7 +38,9 @@ public class JSObject implements Closeable {
     public JSValue get(String key) {
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
-            return getByKeyNative(jsVM, handle, key);
+            return getByKeyNative(jsVM, handle, key)
+                    // adds instrumentation to track where the obtained JSValue came from
+                    .lateInitAccessorChain(new PropertyAccessor(accessorChain, key));
         }
     }
     private native JSValue getByKeyNative(JSVM jsVM, int handle, String key);
@@ -30,7 +48,9 @@ public class JSObject implements Closeable {
     public JSValue get(int index) {
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
-            return getByIndexNative(jsVM, handle, index);
+            return getByIndexNative(jsVM, handle, index)
+                    // adds instrumentation to track where the obtained JSValue came from
+                    .lateInitAccessorChain(new IndexAccessor(accessorChain, index));
         }
     }
     private native JSValue getByIndexNative(JSVM jsVM, int handle, int index);
@@ -95,4 +115,46 @@ public class JSObject implements Closeable {
         }
     }
     private native void finalizeNative(JSVM jsVM, int handle);
+
+    /**
+     * Attempts to get the name of the constructor function (or class) this object was constructed
+     * from. This is done by reading .constructor.name. The {@link InvalidJSValueType} error
+     * uses this method to extract useful class names.
+     *
+     * This will fail for bare objects created with Object.create(null) or objects where those
+     * properties have been deleted, but those conditions are pretty rare.
+     *
+     * Anonymous objects will have "Object" as their class name.
+     *
+     * If such accesses would trigger a JavaScript error, the error is silently thrown away
+     * and null is returned.
+     *
+     * @return The name of the constructor function, or null if it could not be retrieved.
+     */
+    @Nullable
+    public String getClassName() {
+        synchronized (jsVM.lock) {
+            if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
+            try {
+                return this.getClassNameNative(jsVM, handle);
+            } catch (JSError ignored) {
+                return null;
+            }
+        }
+    }
+    private native String getClassNameNative(JSVM jsVM, int handle);
+
+    /**
+     * Like getClassName(), but never returns null.
+     *
+     * @return A printable class name.
+     */
+    String getRepresentableClassName() {
+        String className = getClassName();
+        if (className != null) {
+            return className;
+        } else {
+            return "<unknown object>";
+        }
+    }
 }

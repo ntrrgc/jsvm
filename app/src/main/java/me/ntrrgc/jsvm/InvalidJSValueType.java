@@ -9,8 +9,16 @@ package me.ntrrgc.jsvm;
 public class InvalidJSValueType extends AssertionError {
     public final JSValue value;
 
-    public InvalidJSValueType(String expectedType, String actualType, JSValue value) {
-        super(expectedType + " was expected but " + actualType + " was found.");
+    private static String getMessagePrefix(JSValue value) {
+        if (value.accessorChain != null) {
+            return "In " + value.accessorChain.getFullPath() + ", ";
+        } else {
+            return "";
+        }
+    }
+
+    InvalidJSValueType(String expectedType, String actualType, JSValue value) {
+        super(getMessagePrefix(value) + expectedType + " was expected but " + actualType + " was found.");
         this.value = value;
     }
 }

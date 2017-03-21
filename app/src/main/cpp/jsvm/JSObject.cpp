@@ -50,6 +50,37 @@ Java_me_ntrrgc_jsvm_JSObject_toStringNative(JNIEnv *env, jobject instance, jobje
     });
 }
 
+JNIEXPORT jstring JNICALL
+Java_me_ntrrgc_jsvm_JSObject_getClassNameNative(JNIEnv *env, jobject instance, jobject jsVM_,
+                                                jint handle) {
+
+    JSVM jsVM = (JSVM) jsVM_;
+    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+
+    return JSVMPriv_invokeSafe<jstring>(priv, [priv, env, jsVM, handle] (duk_context *ctx) {
+
+        jstring ret = NULL;
+
+        // Retrieve the object
+        priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
+
+        duk_get_prop_string(ctx, -1, "constructor");
+        if (duk_is_object(ctx, -1)) {
+            duk_get_prop_string(ctx, -1, "name");
+            if (duk_is_string(ctx, -1)) {
+                ret = env->NewStringUTF(duk_get_string(ctx, -1));
+            }
+            duk_pop(ctx);
+        }
+
+        // Restore the stack
+        duk_pop_2(ctx);
+
+        return ret;
+
+    });
+}
+
 JNIEXPORT void JNICALL
 Java_me_ntrrgc_jsvm_JSObject_finalizeNative(JNIEnv *env, jobject instance, jobject jsVM_,
                                             jint handle) {

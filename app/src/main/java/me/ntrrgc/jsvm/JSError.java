@@ -22,7 +22,7 @@ public final class JSError extends RuntimeException {
     private final JSValue errorValue;
 
     public JSError(@NotNull JSValue errorValue) {
-        super(extractErrorMessage(errorValue));
+        super(extractErrorMessage(errorValue.lateInitAccessorChainDefault()));
         this.errorValue = errorValue;
     }
 

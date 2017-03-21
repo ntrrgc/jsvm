@@ -4,20 +4,51 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import me.ntrrgc.jsvm.accessorChains.AccessorChain;
+import me.ntrrgc.jsvm.accessorChains.ClassChainRoot;
+
 /**
  * A variant type class that wraps any value that can be received or sent  to the JS VM.
  *
  * Created by ntrrgc on 1/14/17.
  */
 public final class JSValue {
-    private int type;
+    private final int type;
 
     @Nullable
-    private Object value;
+    private final Object value;
+
+    @Nullable
+    /* package */ AccessorChain accessorChain;
 
     private JSValue(int type, @Nullable Object value) {
         this.type = type;
         this.value = value;
+    }
+
+    @NotNull
+    JSValue lateInitAccessorChain(@NotNull AccessorChain accessorChain) {
+        if (accessorChain == null) throw new AssertionError();
+        // Set it in this JSValue so that it can be read by InvalidJSValueType constructor in case
+        // of a type error.
+        this.accessorChain = accessorChain;
+
+        // If the value is an object or function, propagate the chain to the JSObject, so that
+        // successive property reads or calls extend the chain.
+        if (this.isObject()) {
+            this.asObject().lateInitAccessorChain(accessorChain);
+        }
+
+        return this;
+    }
+
+    @NotNull
+    JSValue lateInitAccessorChainDefault() {
+        if (this.isObject()) {
+            JSObject obj = this.asObject();
+            obj.lateInitAccessorChain(new ClassChainRoot(obj.getRepresentableClassName()));
+        }
+        return this;
     }
 
     private static final int TYPE_UNSUPPORTED = 0;

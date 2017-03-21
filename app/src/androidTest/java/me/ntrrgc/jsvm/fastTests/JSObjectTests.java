@@ -162,15 +162,4 @@ public class JSObjectTests {
         assertEquals(5, obj.get("total").asInt());
     }
 
-    @Test
-    public void testNonExistentMethod() throws Exception {
-        JSObject obj = jsvm.newObject();
-
-        try {
-            obj.invokeMethod("add", JSValue.aNumber(2));
-            fail();
-        } catch (InvalidJSValueType error) {
-            assertEquals("function was expected but undefined was found.", error.getMessage());
-        }
-    }
 }

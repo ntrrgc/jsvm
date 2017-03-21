@@ -6,6 +6,10 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.ref.ReferenceQueue;
 import java.util.ArrayList;
 
+import me.ntrrgc.jsvm.accessorChains.ClassChainRoot;
+import me.ntrrgc.jsvm.accessorChains.EvalExpressionChainRoot;
+import me.ntrrgc.jsvm.accessorChains.GlobalScopeChainRoot;
+
 /**
  * Created by ntrrgc on 1/14/17.
  */
@@ -72,7 +76,8 @@ public class JSVM {
 
     public JSValue evaluate(String code) {
         synchronized (this.lock) {
-            return evaluateNative(code);
+            return evaluateNative(code)
+                    .lateInitAccessorChain(new EvalExpressionChainRoot(code));
         }
     }
     private native JSValue evaluateNative(String code);
@@ -108,7 +113,8 @@ public class JSVM {
     @NotNull
     public JSObject getGlobalScope() {
         synchronized (this.lock) {
-            return this.getGlobalScopeNative();
+            return this.getGlobalScopeNative()
+                    .lateInitAccessorChain(new GlobalScopeChainRoot());
         }
     }
     private native JSObject getGlobalScopeNative();
@@ -123,7 +129,8 @@ public class JSVM {
     @NotNull
     public JSObject newObject() {
         synchronized (this.lock) {
-            return this.newObjectNative();
+            JSObject obj = this.newObjectNative();
+            return obj.lateInitAccessorChain(new ClassChainRoot(obj.getRepresentableClassName()));
         }
     }
     private native JSObject newObjectNative();
@@ -140,7 +147,8 @@ public class JSVM {
     @NotNull
     public JSObject newObjectWithProto(@Nullable JSObject proto) {
         synchronized (this.lock) {
-            return this.newObjectNativeWithProto(proto);
+            JSObject obj = this.newObjectNativeWithProto(proto);
+            return obj.lateInitAccessorChain(new ClassChainRoot(obj.getRepresentableClassName()));
         }
     }
     private native JSObject newObjectNativeWithProto(JSObject proto);
