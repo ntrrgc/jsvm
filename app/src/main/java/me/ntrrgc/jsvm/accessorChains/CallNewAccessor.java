@@ -6,8 +6,8 @@ import org.jetbrains.annotations.NotNull;
  * Created by ntrrgc on 3/21/17.
  */
 
-public final class NewCallAccessor extends TraversingAccessor {
-    public NewCallAccessor(@NotNull AccessorChain parentChain) {
+public final class CallNewAccessor extends TraversingAccessor {
+    public CallNewAccessor(@NotNull AccessorChain parentChain) {
         super(parentChain);
     }
 

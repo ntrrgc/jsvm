@@ -2,10 +2,8 @@ package me.ntrrgc.jsvm;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.ref.ReferenceQueue;
-
 import me.ntrrgc.jsvm.accessorChains.CallAccessor;
-import me.ntrrgc.jsvm.accessorChains.NewCallAccessor;
+import me.ntrrgc.jsvm.accessorChains.CallNewAccessor;
 
 /**
  * Created by ntrrgc on 1/24/17.
@@ -71,7 +69,7 @@ public final class JSFunction extends JSObject {
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
             return callNewNative(jsVM, handle, args)
-                    .lateInitAccessorChain(new NewCallAccessor(accessorChain));
+                    .lateInitAccessorChain(new CallNewAccessor(accessorChain));
         }
     }
     private native JSValue callNewNative(JSVM jsVM, int handle, JSValue[] args);
