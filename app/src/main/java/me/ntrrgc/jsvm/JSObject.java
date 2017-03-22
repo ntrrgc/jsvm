@@ -32,7 +32,7 @@ public class JSObject implements Closeable {
         return aliveHandle && !jsVM.finalized;
     }
 
-    protected JSObject() {}
+    JSObject() {}
 
     public JSValue get(String key) {
         synchronized (jsVM.lock) {
