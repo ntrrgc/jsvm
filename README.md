@@ -1,4 +1,4 @@
-**Important:** This project is still under heavy development. Some features mentioned here are not yet implemented, some methods using are still missing and I've still not decided on a license. Still, I'm leaving this README here so that the purpose of the project can be understood.
+**Important:** This project is still under heavy development. Some features mentioned here are not yet implemented, the API may have breaking changes every so often and I've still not decided on a license. Still, I'm leaving this README here so that the purpose of the project can be understood.
 
 <hr/>
 
