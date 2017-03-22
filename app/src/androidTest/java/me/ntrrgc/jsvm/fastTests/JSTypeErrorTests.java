@@ -59,7 +59,7 @@ public class JSTypeErrorTests {
             obj.invokeMethod("add", JSValue.aNumber(2));
             fail();
         } catch (JSTypeError error) {
-            assertEquals("In <unknown object>:add, function was expected but undefined was found.", error.getMessage());
+            assertEquals("In [unknown object]:add, function was expected but undefined was found.", error.getMessage());
         }
     }
 
