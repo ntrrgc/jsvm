@@ -14,11 +14,17 @@ import me.ntrrgc.jsvm.accessorChains.PropertyAccessor;
  */
 
 public class JSObject implements Closeable {
-    protected @NotNull JSVM jsVM; // initialized in JNI
-    protected int handle; // initialized in JNI
-
+    /**
+     * WARNING: Objects of this class are allocated and initialized from JNI.
+     * In order to add, remove or change a field it's necessary to change C++ code,
+     * otherwise an error may be thrown or the fields could (and will!) be initialized
+     * with garbage.
+     *
+     * The constructor on this class never runs.
+     */
+    protected final @NotNull JSVM jsVM; // initialized in JNI
+    protected final int handle; // initialized in JNI
     private boolean aliveHandle = true;
-
     AccessorChain accessorChain;
 
     @NotNull
@@ -33,7 +39,9 @@ public class JSObject implements Closeable {
         return aliveHandle && !jsVM.finalized;
     }
 
-    JSObject() {}
+    JSObject() {
+        throw new RuntimeException();
+    }
 
     @NotNull
     public JSValue get(@NotNull String key) {

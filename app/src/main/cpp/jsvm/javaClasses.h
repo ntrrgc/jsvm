@@ -55,6 +55,8 @@ namespace jsvm {
     extern jmethodID    JSObject_ctor;
     extern jfieldID     JSObject_jsVM;
     extern jfieldID     JSObject_handle;
+    extern jfieldID     JSObject_aliveHandle;
+    extern jfieldID     JSObject_accessorChain;
 
     extern jclass       JSFunction_Class;
     extern jmethodID    JSFunction_ctor;
