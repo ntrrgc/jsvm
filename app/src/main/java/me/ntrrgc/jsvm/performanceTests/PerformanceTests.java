@@ -4,6 +4,7 @@ import android.util.Log;
 
 import me.ntrrgc.jsvm.JSObject;
 import me.ntrrgc.jsvm.JSVM;
+import me.ntrrgc.jsvm.JSVMBuilder;
 import me.ntrrgc.jsvm.JSValue;
 import me.ntrrgc.jsvm.performanceTests.controlGroup.DummyPOJO;
 
@@ -111,7 +112,9 @@ public class PerformanceTests {
         StringBuilder log = new StringBuilder();
 
         log.append("Starting testObjectCreation:\n");
-        JSVM jsvm = new JSVM();
+        JSVM jsvm = new JSVMBuilder()
+                .setAccessorChainsEnabled(false)
+                .createJSVM();
 
         final long start = System.currentTimeMillis();
         for (int i = 0; i < iterations; i++) {

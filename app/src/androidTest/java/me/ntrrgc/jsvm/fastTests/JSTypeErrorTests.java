@@ -10,6 +10,7 @@ import org.junit.runner.RunWith;
 import me.ntrrgc.jsvm.JSTypeError;
 import me.ntrrgc.jsvm.JSObject;
 import me.ntrrgc.jsvm.JSVM;
+import me.ntrrgc.jsvm.JSVMBuilder;
 import me.ntrrgc.jsvm.JSValue;
 
 import static org.junit.Assert.assertEquals;
@@ -111,6 +112,29 @@ public class JSTypeErrorTests {
             fail();
         } catch (JSTypeError error) {
             assertEquals("In getNestedStructure().a.b[0].c.d, object was expected but undefined was found.",
+                    error.getMessage());
+        }
+    }
+
+    @Test
+    public void testPropertyChainsCanBeDisabled() throws Exception {
+        JSVM jsvm = new JSVMBuilder()
+                .setAccessorChainsEnabled(false)
+                .createJSVM();
+
+        jsvm.evaluate("function getNestedStructure() {\n" +
+                "return {a: {b: [{c: {}}]}};\n" +
+                "}");
+
+        try {
+            jsvm.evaluate("getNestedStructure().a").asObject()
+                    .get("b").asObject()
+                    .get(0).asObject()
+                    .get("c").asObject()
+                    .get("d").asObject();
+            fail();
+        } catch (JSTypeError error) {
+            assertEquals("object was expected but undefined was found.",
                     error.getMessage());
         }
     }

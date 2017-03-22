@@ -47,8 +47,11 @@ public final class JSFunction extends JSObject {
 
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
-            return callNative(jsVM, handle, thisArg, args)
-                    .lateInitAccessorChain(new CallAccessor(accessorChain));
+            JSValue ret = callNative(jsVM, handle, thisArg, args);
+            if (jsVM.accessorChainsEnabled) {
+                ret.lateInitAccessorChain(new CallAccessor(accessorChain));
+            }
+            return ret;
         }
     }
     private native JSValue callNative(JSVM jsVM, int handle, JSValue thisArg, JSValue[] args);
@@ -70,8 +73,11 @@ public final class JSFunction extends JSObject {
 
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
-            return callNewNative(jsVM, handle, args)
-                    .lateInitAccessorChain(new CallNewAccessor(accessorChain));
+            JSValue ret = callNewNative(jsVM, handle, args);
+            if (jsVM.accessorChainsEnabled) {
+                ret.lateInitAccessorChain(new CallNewAccessor(accessorChain));
+            }
+            return ret;
         }
     }
     private native JSValue callNewNative(JSVM jsVM, int handle, JSValue[] args);

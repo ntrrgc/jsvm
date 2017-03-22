@@ -37,9 +37,12 @@ public class JSObject implements Closeable {
     public JSValue get(String key) {
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
-            return getByKeyNative(jsVM, handle, key)
-                    // adds instrumentation to track where the obtained JSValue came from
-                    .lateInitAccessorChain(new PropertyAccessor(accessorChain, key));
+            JSValue ret = getByKeyNative(jsVM, handle, key);
+            if (jsVM.accessorChainsEnabled) {
+                // adds instrumentation to track where the obtained JSValue came from
+                ret.lateInitAccessorChain(new PropertyAccessor(accessorChain, key));
+            }
+            return ret;
         }
     }
     private native JSValue getByKeyNative(JSVM jsVM, int handle, String key);
@@ -47,9 +50,12 @@ public class JSObject implements Closeable {
     public JSValue get(int index) {
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
-            return getByIndexNative(jsVM, handle, index)
-                    // adds instrumentation to track where the obtained JSValue came from
-                    .lateInitAccessorChain(new IndexAccessor(accessorChain, index));
+            JSValue ret = getByIndexNative(jsVM, handle, index);
+            if (jsVM.accessorChainsEnabled) {
+                // adds instrumentation to track where the obtained JSValue came from
+                ret.lateInitAccessorChain(new IndexAccessor(accessorChain, index));
+            }
+            return ret;
         }
     }
     private native JSValue getByIndexNative(JSVM jsVM, int handle, int index);

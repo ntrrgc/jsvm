@@ -65,12 +65,20 @@ public class JSVM {
      */
     /* package */ final Object lock = new Object();
 
+    final boolean accessorChainsEnabled;
+
     // Dummy method used in some performance tests to measure JNI overhead.
     public static native double returnADouble();
 
     private native void nativeInit();
 
     public JSVM() {
+        this.accessorChainsEnabled = true;
+        nativeInit();
+    }
+
+    public JSVM(boolean accessorChainsEnabled) {
+        this.accessorChainsEnabled = accessorChainsEnabled;
         nativeInit();
     }
 
@@ -113,8 +121,11 @@ public class JSVM {
     @NotNull
     public JSObject getGlobalScope() {
         synchronized (this.lock) {
-            return this.getGlobalScopeNative()
-                    .lateInitAccessorChain(GlobalScopeChainRoot.INSTANCE);
+            JSObject global = this.getGlobalScopeNative();
+            if (accessorChainsEnabled) {
+                global.lateInitAccessorChain(GlobalScopeChainRoot.INSTANCE);
+            }
+            return global;
         }
     }
     private native JSObject getGlobalScopeNative();
@@ -130,7 +141,10 @@ public class JSVM {
     public JSObject newObject() {
         synchronized (this.lock) {
             JSObject obj = this.newObjectNative();
-            return obj.lateInitAccessorChain(new ClassChainRoot(obj.getRepresentableClassName()));
+            if (accessorChainsEnabled) {
+                obj.lateInitAccessorChain(new ClassChainRoot(obj.getRepresentableClassName()));
+            }
+            return obj;
         }
     }
     private native JSObject newObjectNative();
@@ -148,7 +162,10 @@ public class JSVM {
     public JSObject newObjectWithProto(@Nullable JSObject proto) {
         synchronized (this.lock) {
             JSObject obj = this.newObjectNativeWithProto(proto);
-            return obj.lateInitAccessorChain(new ClassChainRoot(obj.getRepresentableClassName()));
+            if (accessorChainsEnabled) {
+                obj.lateInitAccessorChain(new ClassChainRoot(obj.getRepresentableClassName()));
+            }
+            return obj;
         }
     }
     private native JSObject newObjectNativeWithProto(JSObject proto);
