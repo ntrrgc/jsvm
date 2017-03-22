@@ -9,7 +9,7 @@ public final class GlobalScopeChainRoot extends AccessorChainRoot {
         super();
     }
 
-    public static GlobalScopeChainRoot INSTANCE = new GlobalScopeChainRoot();
+    public final static GlobalScopeChainRoot INSTANCE = new GlobalScopeChainRoot();
 
     @Override
     public String getFullPath() {
