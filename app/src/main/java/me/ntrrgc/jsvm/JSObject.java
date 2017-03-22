@@ -153,7 +153,7 @@ public class JSObject implements Closeable {
         if (className != null) {
             return className;
         } else {
-            return "<unknown object>";
+            return "[unknown object]";
         }
     }
 }
