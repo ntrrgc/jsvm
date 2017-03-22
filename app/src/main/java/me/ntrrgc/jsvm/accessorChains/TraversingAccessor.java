@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 abstract class TraversingAccessor implements AccessorChain {
     @NotNull
-    private final AccessorChain parentChain;
+    protected final AccessorChain parentChain;
 
     private final int depthRemaining;
 

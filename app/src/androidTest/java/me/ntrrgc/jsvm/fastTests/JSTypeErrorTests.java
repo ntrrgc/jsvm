@@ -145,7 +145,7 @@ public class JSTypeErrorTests {
                     .get("nonexistent").asInt();
             fail();
         } catch (JSTypeError error) {
-            assertEquals("In new (Object)().nonexistent, number was expected but undefined was found.",
+            assertEquals("In new Object().nonexistent, number was expected but undefined was found.",
                     error.getMessage());
         }
     }
@@ -161,7 +161,26 @@ public class JSTypeErrorTests {
                     .get("nonexistent").asInt();
             fail();
         } catch (JSTypeError error) {
-            assertEquals("In new (obj.ctor)().nonexistent, number was expected but undefined was found.",
+            assertEquals("In new obj.ctor().nonexistent, number was expected but undefined was found.",
+                    error.getMessage());
+        }
+    }
+
+    @Test
+    public void testEvenMoreComplexNewOperator() throws Exception {
+        jsvm.evaluate("var obj = { ctor: function () {} }\n" +
+                "function objFactory() { return {obj: obj}; }");
+
+        try {
+            jsvm.getGlobalScope().get("objFactory").asFunction()
+                    .invoke().asObject()
+                    .get("obj").asObject()
+                    .get("ctor").asFunction()
+                    .callNew().asObject()
+                    .get("nonexistent").asInt();
+            fail();
+        } catch (JSTypeError error) {
+            assertEquals("In new (objFactory().obj.ctor)().nonexistent, number was expected but undefined was found.",
                     error.getMessage());
         }
     }

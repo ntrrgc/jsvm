@@ -11,9 +11,31 @@ public final class CallNewAccessor extends TraversingAccessor {
         super(parentChain);
     }
 
+    private boolean needsParentheses(@NotNull AccessorChain parent) {
+        // Parentheses can be omitted when all the parent accessors are property accesses,
+        // index accesses or the global root.
+        while (true) {
+            if (!(parent instanceof PropertyAccessor ||
+                    parent instanceof IndexAccessor ||
+            parent instanceof GlobalScopeChainRoot)) {
+                return true;
+            }
+
+            if (parent instanceof TraversingAccessor) {
+                parent = ((TraversingAccessor)parent).parentChain;
+            } else {
+                return false;
+            }
+        }
+    }
+
     @Override
     protected String joinWithOther(AccessorChain parentTraversing, boolean addEllipsis) {
-        return "new (" + parentTraversing.getFullPath() + (addEllipsis ? "..." : "") + ")()";
+        if (needsParentheses(parentTraversing)) {
+            return "new (" + parentTraversing.getFullPath() + (addEllipsis ? "..." : "") + ")()";
+        } else {
+            return "new " + parentTraversing.getFullPath() + (addEllipsis ? "..." : "") + "()";
+        }
     }
 
     @Override
