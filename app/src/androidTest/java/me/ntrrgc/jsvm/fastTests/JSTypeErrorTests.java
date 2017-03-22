@@ -209,4 +209,24 @@ public class JSTypeErrorTests {
                     error.getMessage());
         }
     }
+
+@Test
+public void testCanonicalizationIssue() throws Exception {
+    jsvm.evaluate("var anObject = {};\n" +
+            "var a = anObject;" +
+            "var b = anObject;");
+
+    JSObject a = jsvm.getGlobalScope().get("a").asObject();
+    JSObject b = jsvm.getGlobalScope().get("b").asObject();
+    assertSame(a, b);
+
+    try {
+        a.get("prop").asInt();
+        fail();
+    } catch (JSTypeError error) {
+        assertEquals("In b.prop, number was expected but undefined was found.",
+                error.getMessage());
+    }
+}
+
 }
