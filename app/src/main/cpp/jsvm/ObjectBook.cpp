@@ -30,17 +30,12 @@ _JSObject *ObjectBook::createJSObjectFromStack(JNIEnv *env, ObjectBook::handle_t
     JSObject jsObject;
     if (duk_is_function(ctx, stackPosition)) {
         // Create new JSFunction
-        jsObject = (JSFunction) env->AllocObject(JSFunction_Class);
+        jsObject = (JSFunction) env->NewObject(JSFunction_Class, JSFunction_ctor, priv->jsVM, handle);
     } else {
         // Create new JSObject
-        jsObject = (JSObject) env->AllocObject(JSObject_Class);
+        jsObject = (JSObject) env->NewObject(JSObject_Class, JSObject_ctor, priv->jsVM, handle);
     }
     jsvm_assert(jsObject);
-
-    env->SetObjectField(jsObject, JSObject_jsVM, priv->jsVM);
-    env->SetIntField(jsObject, JSObject_handle, handle);
-    env->SetBooleanField(jsObject, JSObject_aliveHandle, JNI_TRUE);
-    env->SetObjectField(jsObject, JSObject_accessorChain, NULL);
 
     return jsObject;
 }

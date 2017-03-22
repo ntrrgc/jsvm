@@ -10,7 +10,9 @@ import me.ntrrgc.jsvm.accessorChains.CallNewAccessor;
  */
 
 public final class JSFunction extends JSObject {
-    private JSFunction() {}
+    private JSFunction(@NotNull JSVM jsVM, int handle) {
+        super(jsVM, handle);
+    }
 
     /**
      * Call the function with the specified arguments.

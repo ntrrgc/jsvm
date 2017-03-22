@@ -132,14 +132,14 @@ void ::jsvm::initClassesAndFields(JNIEnv *env) {
     JSValue_value = env->GetFieldID(JSValue_Class, "value", "Ljava/lang/Object;");
 
     JSObject_Class = findClass(env, "me/ntrrgc/jsvm/JSObject");
-    JSObject_ctor = env->GetMethodID(JSObject_Class, "<init>", "()V");
+    JSObject_ctor = env->GetMethodID(JSObject_Class, "<init>", "(Lme/ntrrgc/jsvm/JSVM;I)V");
     JSObject_jsVM = env->GetFieldID(JSObject_Class, "jsVM", "Lme/ntrrgc/jsvm/JSVM;");
     JSObject_handle = env->GetFieldID(JSObject_Class, "handle", "I");
     JSObject_aliveHandle = env->GetFieldID(JSObject_Class, "aliveHandle", "Z");
     JSObject_accessorChain = env->GetFieldID(JSObject_Class, "accessorChain", "Lme/ntrrgc/jsvm/accessorChains/AccessorChain;");
 
     JSFunction_Class = findClass(env, "me/ntrrgc/jsvm/JSFunction");
-    JSFunction_ctor = env->GetMethodID(JSFunction_Class, "<init>", "()V");
+    JSFunction_ctor = env->GetMethodID(JSFunction_Class, "<init>", "(Lme/ntrrgc/jsvm/JSVM;I)V");
 }
 
 
