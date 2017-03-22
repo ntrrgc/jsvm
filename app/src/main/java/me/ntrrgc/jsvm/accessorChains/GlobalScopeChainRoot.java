@@ -5,7 +5,7 @@ package me.ntrrgc.jsvm.accessorChains;
  */
 
 public final class GlobalScopeChainRoot extends AccessorChainRoot {
-    protected GlobalScopeChainRoot() {
+    private GlobalScopeChainRoot() {
         super();
     }
 
