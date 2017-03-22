@@ -1,5 +1,6 @@
 package me.ntrrgc.jsvm.accessorChains;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -25,8 +26,13 @@ abstract class TraversingAccessor implements AccessorChain {
         this.depthRemaining = this.parentChain.getDepthRemaining() - 1;
     }
 
+    @Contract(pure = true)
     abstract protected String joinWithGlobalScope();
+
+    @Contract(pure = true)
     abstract protected String joinWithClassChainRoot(ClassChainRoot parentClassChainRoot);
+
+    @Contract(pure = true)
     abstract protected String joinWithOther(AccessorChain parentTraversing, boolean addEllipsis);
 
     @Override

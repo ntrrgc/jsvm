@@ -1,5 +1,7 @@
 package me.ntrrgc.jsvm.accessorChains;
 
+import org.jetbrains.annotations.Contract;
+
 import me.ntrrgc.jsvm.JSTypeError;
 
 /**
@@ -24,6 +26,9 @@ import me.ntrrgc.jsvm.JSTypeError;
  */
 
 public interface AccessorChain {
+    @Contract(pure = true)
     String getFullPath();
+
+    @Contract(pure = true)
     int getDepthRemaining();
 }
