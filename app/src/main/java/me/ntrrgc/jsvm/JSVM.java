@@ -77,11 +77,12 @@ public class JSVM {
         nativeInit();
     }
 
-    public JSVM(boolean accessorChainsEnabled) {
+    JSVM(boolean accessorChainsEnabled) {
         this.accessorChainsEnabled = accessorChainsEnabled;
         nativeInit();
     }
 
+    @NotNull
     public JSValue evaluate(String code) {
         synchronized (this.lock) {
             return evaluateNative(code)

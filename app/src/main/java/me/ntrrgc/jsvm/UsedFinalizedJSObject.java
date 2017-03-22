@@ -5,7 +5,7 @@ package me.ntrrgc.jsvm;
  */
 
 final public class UsedFinalizedJSObject extends RuntimeException {
-    public JSObject accessedJSObject;
+    public final JSObject accessedJSObject;
 
     UsedFinalizedJSObject(JSObject jsObject) {
         super("Attempted to use finalized jsObject");

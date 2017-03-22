@@ -19,6 +19,7 @@ public final class JSError extends RuntimeException {
     // Fun fact: errorValue may be not be a object.
     // Albeit less helpful, `throw "whatever";`, or even
     // `throw undefined;` are valid JavaScript.
+    @NotNull
     private final JSValue errorValue;
 
     public JSError(@NotNull JSValue errorValue) {
@@ -26,6 +27,7 @@ public final class JSError extends RuntimeException {
         this.errorValue = errorValue;
     }
 
+    @NotNull
     public JSValue getErrorValue() {
         return errorValue;
     }

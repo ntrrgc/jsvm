@@ -21,6 +21,7 @@ public final class JSFunction extends JSObject {
      * @param args Arguments to pass to the JavaScript function.
      * @return The return value of the JavaScript function.
      */
+    @NotNull
     public JSValue invoke(@NotNull JSValue... args) {
         return call(JSValue.anUndefined(), args);
     }
@@ -35,6 +36,7 @@ public final class JSFunction extends JSObject {
      * @param args Arguments to pass to the JavaScript function.
      * @return The return value of the JavaScript function.
      */
+    @NotNull
     public JSValue call(@NotNull JSValue thisArg, @NotNull JSValue... args) {
         if (thisArg == null) {
             throw new IllegalArgumentException("Passed raw null pointer to JSFunction.call() instead of JSValue. Use JSValue.aNull() instead.");
@@ -64,6 +66,7 @@ public final class JSFunction extends JSObject {
      * @param args Arguments to pass to the JavaScript constructor function.
      * @return The constructed object.
      */
+    @NotNull
     public JSValue callNew(@NotNull JSValue... args) {
         for (JSValue arg : args) {
             if (arg == null) {
