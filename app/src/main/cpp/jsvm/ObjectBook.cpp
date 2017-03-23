@@ -53,6 +53,7 @@ JSObject ObjectBook::exposeObject(JNIEnv *env, duk_idx_t stackPosition) {
     JSObject existingJSObject = this->getStackTopExistingJSObject(env);
 
     if (existingJSObject != NULL) {
+        duk_pop(ctx); // duplicated object
         return existingJSObject;
     } else {
         // The object does not have handle associated, or

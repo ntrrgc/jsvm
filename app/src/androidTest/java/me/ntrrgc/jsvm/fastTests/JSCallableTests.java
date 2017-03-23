@@ -16,6 +16,7 @@ import me.ntrrgc.jsvm.JSVM;
 import me.ntrrgc.jsvm.JSValue;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Instrumentation test, which will execute on an Android device.
@@ -63,6 +64,25 @@ public class JSCallableTests {
         });
         JSValue ret = jsFunction.invoke(JSValue.anObject(obj));
         assertEquals(5, ret.asInt());
+    }
+
+    @Test
+    public void functionThatFails() throws Exception {
+        JSObject obj = jsvm.newObject();
+        obj.set("x", JSValue.aNumber(5));
+        JSFunction jsFunction = jsvm.function(new JSCallable() {
+            @NotNull
+            @Override
+            public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
+                throw new RuntimeException("Oops");
+            }
+        });
+        try {
+            jsFunction.invoke(JSValue.anObject(obj));
+            fail();
+        } catch (JSError jsError) {
+            assertEquals("Java callable threw an exception: Oops", jsError.getMessage());
+        }
     }
 
     @Test

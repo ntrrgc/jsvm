@@ -95,8 +95,11 @@ Java_me_ntrrgc_jsvm_JSVM_getStackSizeNative(JNIEnv *env, jobject instance) {
     JSVMPriv* priv = JSVM_getPriv(env, jsVM);
     duk_context* ctx = priv->ctx;
 
+    duk_push_int(ctx, 1);
+    duk_pop(ctx);
+
     duk_idx_t topIndex = duk_get_top_index(ctx);
-    return topIndex != DUK_INVALID_INDEX ? (int) topIndex - 1 : 0;
+    return topIndex < 0 ? 0 : topIndex + 1;
 
 }
 
@@ -228,14 +231,34 @@ static duk_ret_t JSVM_dukMakeNativeCall(duk_context *ctx) {
     JSValue jsCallableRet = (JSValue)
             env->CallObjectMethod(jsVM, JSVM_callNative, callableHandle, thisArg, argsArray);
 
-    // Return the JSValue created in JSCallable to Duktape
-    JSValue_push(env, jsCallableRet, ctx);
+    if (!env->ExceptionCheck()) {
+        // Return the JSValue created in JSCallable to Duktape
+        JSValue_push(env, jsCallableRet, ctx);
 
-    env->DeleteLocalRef(jsCallableRet);
-    env->DeleteLocalRef(argsArray);
-    env->DeleteLocalRef(thisArg);
+        env->DeleteLocalRef(jsCallableRet);
+        env->DeleteLocalRef(argsArray);
+        env->DeleteLocalRef(thisArg);
 
-    return 1; // there is a return value at the top of the stack
+        return 1; // there is a return value at the top of the stack
+    } else {
+        // Java exception thrown. Must be a JSError.
+        jthrowable jsError = env->ExceptionOccurred();
+
+        // Handle the exception by throwing the attached JSObject.
+
+        // Push the error value
+        env->ExceptionClear();
+        jsvm_assert(env->IsInstanceOf(jsError, JSError_Class));
+        JSValue errorValue = (JSValue) env->GetObjectField(jsError, JSError_errorValue);
+        JSValue_push(env, errorValue, ctx);
+
+        env->DeleteLocalRef(errorValue);
+        env->DeleteLocalRef(argsArray);
+        env->DeleteLocalRef(thisArg);
+
+        // Throw in Duktape
+        duk_throw(ctx);
+    }
 }
 
 JSVMPriv::JSVMPriv(JNIEnv *initialJNIEnv, JSVM initialJSVM)

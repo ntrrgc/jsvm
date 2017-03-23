@@ -42,6 +42,7 @@ namespace jsvm {
 
     extern jclass       JSError_Class;
     extern jmethodID    JSError_ctor;
+    extern jfieldID     JSError_errorValue;
 
     extern jclass       IllegalArgumentException_Class;
     extern jmethodID    IllegalArgumentException_ctor;

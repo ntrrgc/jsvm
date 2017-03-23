@@ -39,6 +39,7 @@ namespace jsvm {
 
     jclass      JSError_Class = NULL;
     jmethodID   JSError_ctor = NULL;
+    jfieldID    JSError_errorValue = NULL;
 
     jclass      IllegalArgumentException_Class = NULL;
     jmethodID   IllegalArgumentException_ctor = NULL;
@@ -127,6 +128,7 @@ void ::jsvm::initClassesAndFields(JNIEnv *env) {
     JSError_Class = findClass(env, "me/ntrrgc/jsvm/JSError");
     JSError_ctor = env->GetMethodID(JSError_Class, "<init>",
                                     "(Lme/ntrrgc/jsvm/JSValue;)V");
+    JSError_errorValue = env->GetFieldID(JSError_Class, "errorValue", "Lme/ntrrgc/jsvm/JSValue;");
 
     IllegalArgumentException_Class = findClass(env, "java/lang/IllegalArgumentException");
     IllegalArgumentException_ctor = env->GetMethodID(IllegalArgumentException_Class, "<init>",
