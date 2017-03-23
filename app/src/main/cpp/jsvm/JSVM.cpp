@@ -203,7 +203,7 @@ Java_me_ntrrgc_jsvm_JSVM_newFunctionNative(JNIEnv *env, jobject instance, jint c
  * Called as a Duktape function, invokes a JSCallable and passes the result to Duktape through
  * the stack.
  */
-static duk_ret_t JSVM_nativeCall(duk_context *ctx) {
+static duk_ret_t JSVM_dukMakeNativeCall(duk_context *ctx) {
     JSVMPriv* priv = thisThreadJSVMPriv;
     JSVM jsVM = priv->jsVM;
     JNIEnv* env = priv->env;
@@ -224,21 +224,14 @@ static duk_ret_t JSVM_nativeCall(duk_context *ctx) {
         duk_pop(ctx);
     }
 
-    HandleAllocator handleAllocator = (HandleAllocator)
-            env->GetObjectField(priv->jsVM, JSVM_callableAllocator);
-    JSCallable callable = (JSCallable)
-            env->CallObjectMethod(handleAllocator, HandleAllocator_get, callableHandle);
-
     // Call the Java callable
     JSValue jsCallableRet = (JSValue)
-            env->CallObjectMethod(callable, JSCallable_call, argsArray, thisArg, jsVM);
+            env->CallObjectMethod(jsVM, JSVM_callNative, callableHandle, thisArg, argsArray);
 
     // Return the JSValue created in JSCallable to Duktape
     JSValue_push(env, jsCallableRet, ctx);
 
     env->DeleteLocalRef(jsCallableRet);
-    env->DeleteLocalRef(callable);
-    env->DeleteLocalRef(handleAllocator);
     env->DeleteLocalRef(argsArray);
     env->DeleteLocalRef(thisArg);
 
@@ -279,7 +272,7 @@ JSVMPriv::JSVMPriv(JNIEnv *initialJNIEnv, JSVM initialJSVM)
                 "};\n"
             "})\n");
     // Pass the nativeCall function
-    duk_push_c_function(ctx, JSVM_nativeCall, 3);
+    duk_push_c_function(ctx, JSVM_dukMakeNativeCall, 3);
     duk_call(ctx, 1);
     // _jsvmTrampolineFactory is now at the top of the stack, save it in the stash
     duk_put_prop_index(ctx, -2, GLOBAL_STASH_INDEX_TRAMPOLINE_FACTORY);

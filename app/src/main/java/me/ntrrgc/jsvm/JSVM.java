@@ -8,6 +8,8 @@ import java.util.ArrayList;
 
 import me.ntrrgc.jsvm.accessorChains.ClassChainRoot;
 import me.ntrrgc.jsvm.accessorChains.EvalExpressionChainRoot;
+import me.ntrrgc.jsvm.accessorChains.FunctionArgumentChainRoot;
+import me.ntrrgc.jsvm.accessorChains.FunctionThisChainRoot;
 import me.ntrrgc.jsvm.accessorChains.GlobalScopeChainRoot;
 
 /**
@@ -190,6 +192,31 @@ public class JSVM {
         }
     }
     private native JSFunction newFunctionNative(int callableHandle);
+
+    /**
+     * This function is called from JNI when Duktape tries to call a native function.
+     */
+    private JSValue callNative(int callableHandle, JSValue thisArg, JSValue[] args) {
+        // Initialize accessor chains for parameters
+        thisArg.lateInitAccessorChain(FunctionThisChainRoot.INSTANCE);
+        int i = 0;
+        for (JSValue arg: args) {
+            arg.lateInitAccessorChain(FunctionArgumentChainRoot.getInstance(i));
+            i++;
+        }
+        try {
+            return callableAllocator.get(callableHandle).call(args, thisArg, this);
+        } catch (JSError jsError) {
+            throw jsError;
+        } catch (Throwable unexpectedError) {
+            // TODO: Use custom subclass of JS' Error.
+            // TODO: Retrieve stacktrace from the point callNative() was called.
+            JSObject jsErrorObject = getGlobalScope().get("Error").asFunction()
+                    .callNew(JSValue.aString("Java callable threw an exception: " + unexpectedError.getMessage()))
+                    .asObject();
+            throw new JSError(JSValue.anObject(jsErrorObject));
+        }
+    }
 
     public native int getWeakRefCount();
 }

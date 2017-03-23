@@ -21,6 +21,7 @@ namespace jsvm {
     extern jfieldID     JSVM_jsObjectsByHandle;
     extern jfieldID     JSVM_deadJSObjectsRefs;
     extern jfieldID     JSVM_callableAllocator;
+    extern jmethodID    JSVM_callNative;
 
     extern jclass       JSObjectWeakReference_Class;
     extern jmethodID    JSObjectWeakReference_ctor;

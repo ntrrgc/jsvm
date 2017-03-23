@@ -18,6 +18,7 @@ namespace jsvm {
     jfieldID    JSVM_jsObjectsByHandle = NULL;
     jfieldID    JSVM_deadJSObjectsRefs = NULL;
     jfieldID    JSVM_callableAllocator = NULL;
+    jmethodID   JSVM_callNative = NULL;
 
     jclass      JSObjectWeakReference_Class = NULL;
     jmethodID   JSObjectWeakReference_ctor = NULL;
@@ -101,6 +102,8 @@ void ::jsvm::initClassesAndFields(JNIEnv *env) {
     JSVM_jsObjectsByHandle = env->GetFieldID(JSVM_Class, "jsObjectsByHandle", "Ljava/util/ArrayList;");
     JSVM_deadJSObjectsRefs = env->GetFieldID(JSVM_Class, "deadJSObjectsRefs", "Ljava/lang/ref/ReferenceQueue;");
     JSVM_callableAllocator = env->GetFieldID(JSVM_Class, "callableAllocator", "Lme/ntrrgc/jsvm/HandleAllocator;");
+    JSVM_callNative = env->GetMethodID(JSVM_Class, "callNative",
+                                       "(ILme/ntrrgc/jsvm/JSValue;[Lme/ntrrgc/jsvm/JSValue;)Lme/ntrrgc/jsvm/JSValue;");
 
     JSObjectWeakReference_Class = findClass(env, "me/ntrrgc/jsvm/JSObjectWeakReference");
     JSObjectWeakReference_ctor = env->GetMethodID(JSObjectWeakReference_Class, "<init>",

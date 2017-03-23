@@ -9,7 +9,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import me.ntrrgc.jsvm.JSCallable;
+import me.ntrrgc.jsvm.JSError;
 import me.ntrrgc.jsvm.JSFunction;
+import me.ntrrgc.jsvm.JSObject;
 import me.ntrrgc.jsvm.JSVM;
 import me.ntrrgc.jsvm.JSValue;
 
@@ -46,6 +48,34 @@ public class JSCallableTests {
         });
         JSValue ret = jsFunction.invoke(JSValue.aNumber(3), JSValue.aNumber(2));
         assertEquals(5, ret.asInt());
+    }
+
+    @Test
+    public void functionThatReceivesObject() throws Exception {
+        JSObject obj = jsvm.newObject();
+        obj.set("x", JSValue.aNumber(5));
+        JSFunction jsFunction = jsvm.function(new JSCallable() {
+            @NotNull
+            @Override
+            public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
+                return args[0].asObject().get("x");
+            }
+        });
+        JSValue ret = jsFunction.invoke(JSValue.anObject(obj));
+        assertEquals(5, ret.asInt());
+    }
+
+    @Test
+    public void functionThatReceivesObjectFromJSCode() throws Exception {
+        JSFunction jsFunction = jsvm.function(new JSCallable() {
+            @NotNull
+            @Override
+            public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
+                return args[0].asObject().get("x");
+            }
+        });
+        jsvm.getGlobalScope().set("fun", JSValue.anObject(jsFunction));
+        jsvm.evaluate("fun({x: 3})");
     }
 
 }
