@@ -67,6 +67,12 @@ public class JSVM {
 
     final boolean accessorChainsEnabled;
 
+    /**
+     * Manages Java callables accessible from JS.
+     */
+    private HandleAllocator<JSCallable> callableAllocator = new HandleAllocator<>();
+
+
     // Dummy method used in some performance tests to measure JNI overhead.
     public static native double returnADouble();
 
@@ -170,6 +176,20 @@ public class JSVM {
         }
     }
     private native JSObject newObjectNativeWithProto(JSObject proto);
+
+    @NotNull
+    public JSFunction function(@NotNull JSCallable callable) {
+        synchronized (this.lock) {
+            int callableHandle = callableAllocator.allocate(callable);
+
+            JSFunction function = this.newFunctionNative(callableHandle);
+            if (accessorChainsEnabled) {
+                function.lateInitAccessorChain(new ClassChainRoot(function.getRepresentableClassName()));
+            }
+            return function;
+        }
+    }
+    private native JSFunction newFunctionNative(int callableHandle);
 
     public native int getWeakRefCount();
 }

@@ -9,8 +9,8 @@ import me.ntrrgc.jsvm.accessorChains.CallNewAccessor;
  * Created by ntrrgc on 1/24/17.
  */
 
-public final class JSFunction extends JSObject {
-    private JSFunction(@NotNull JSVM jsVM, int handle) {
+public class JSFunction extends JSObject {
+    JSFunction(@NotNull JSVM jsVM, int handle) {
         super(jsVM, handle);
     }
 

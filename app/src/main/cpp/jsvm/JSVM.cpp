@@ -6,9 +6,12 @@
 #include "JSValue.h"
 #include "invokeSafe.h"
 #include "JSObject.h"
+#include "JSFunction.h"
 #include <functional>
 
 using namespace jsvm;
+
+thread_local JSVMPriv* jsvm::thisThreadJSVMPriv = NULL;
 
 /**
  * Get a JSVMPriv object with its JNIEnv and JSVM pointers
@@ -170,6 +173,76 @@ Java_me_ntrrgc_jsvm_JSVM_newObjectNativeWithProto(JNIEnv *env, jobject instance,
 
 }
 
+JNIEXPORT jobject JNICALL
+Java_me_ntrrgc_jsvm_JSVM_newFunctionNative(JNIEnv *env, jobject instance, jint callableHandle) {
+
+    JSVM jsVM = (JSVM) instance;
+    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+
+    return JSVMPriv_invokeSafe<JSObject>(priv, [priv, env, jsVM, callableHandle] (duk_context *ctx) {
+
+        duk_push_global_stash(ctx);
+        duk_get_prop_index(ctx, -1, GLOBAL_STASH_INDEX_TRAMPOLINE_FACTORY);
+        duk_push_int(ctx, callableHandle);
+        duk_call(ctx, 1);
+
+        JSFunction retFunction = (JSFunction) priv->objectBook.exposeObject(env, -1);
+
+        // Restore stack
+        duk_pop_2(ctx); // retFunction, global stash
+
+        return retFunction;
+
+    });
+
+}
+
+}
+
+/**
+ * Called as a Duktape function, invokes a JSCallable and passes the result to Duktape through
+ * the stack.
+ */
+static duk_ret_t JSVM_nativeCall(duk_context *ctx) {
+    JSVMPriv* priv = thisThreadJSVMPriv;
+    JSVM jsVM = priv->jsVM;
+    JNIEnv* env = priv->env;
+
+    jint callableHandle = duk_require_int(ctx, 0);
+
+    JSValue thisArg = JSValue_createFromStack(env, jsVM, 1);
+
+    duk_require_object_coercible(ctx, 2); // args
+    unsigned int countArgs = (unsigned int) duk_get_length(ctx, 2);
+    jobjectArray argsArray = env->NewObjectArray(countArgs, JSValue_Class, NULL);
+
+    for (unsigned int i = 0; i < countArgs; ++i) {
+        duk_get_prop_index(ctx, 2, i);
+        JSValue jsValue = JSValue_createFromStack(env, jsVM, -1);
+        env->SetObjectArrayElement(argsArray, i, jsValue);
+        env->DeleteLocalRef(jsValue);
+        duk_pop(ctx);
+    }
+
+    HandleAllocator handleAllocator = (HandleAllocator)
+            env->GetObjectField(priv->jsVM, JSVM_callableAllocator);
+    JSCallable callable = (JSCallable)
+            env->CallObjectMethod(handleAllocator, HandleAllocator_get, callableHandle);
+
+    // Call the Java callable
+    JSValue jsCallableRet = (JSValue)
+            env->CallObjectMethod(callable, JSCallable_call, argsArray, thisArg, jsVM);
+
+    // Return the JSValue created in JSCallable to Duktape
+    JSValue_push(env, jsCallableRet, ctx);
+
+    env->DeleteLocalRef(jsCallableRet);
+    env->DeleteLocalRef(callable);
+    env->DeleteLocalRef(handleAllocator);
+    env->DeleteLocalRef(argsArray);
+    env->DeleteLocalRef(thisArg);
+
+    return 1; // there is a return value at the top of the stack
 }
 
 JSVMPriv::JSVMPriv(JNIEnv *initialJNIEnv, JSVM initialJSVM)
@@ -187,6 +260,30 @@ JSVMPriv::JSVMPriv(JNIEnv *initialJNIEnv, JSVM initialJSVM)
     duk_push_global_object(ctx);
     duk_put_prop_string(ctx, -2, "global");
     duk_pop(ctx);
+
+    // Create the trampoline factory function used to create functions bound to Java callables.
+
+    // It will be stored in the global stash, so that it's hidden from the user
+    duk_push_global_stash(ctx);
+
+    // The trampoline factory function needs to have the nativeCall function in order to work.
+    // We can't use variables since they would be manipulable by the user, so we have to get a
+    // little creative with closures... Trampoline factory factory!
+    // (This one is used only once, it dies in the stack soon after)
+    duk_eval_string(ctx,
+            "(function _jsvmTrampolineFactoryFactory(nativeCall) {\n"
+                "return function _jsvmTrampolineFactory(callableHandle) {\n"
+                    "return function _jsvmTrampoline() {\n"
+                        "return nativeCall(callableHandle, this, arguments);\n"
+                    "}\n"
+                "};\n"
+            "})\n");
+    // Pass the nativeCall function
+    duk_push_c_function(ctx, JSVM_nativeCall, 3);
+    duk_call(ctx, 1);
+    // _jsvmTrampolineFactory is now at the top of the stack, save it in the stash
+    duk_put_prop_index(ctx, -2, GLOBAL_STASH_INDEX_TRAMPOLINE_FACTORY);
+    duk_pop(ctx); // pop the stash
 
     this->objectBook.lateInit(ctx, this);
 }

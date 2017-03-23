@@ -17,6 +17,7 @@ namespace jsvm {
     jfieldID    JSVM_hPriv = NULL;
     jfieldID    JSVM_jsObjectsByHandle = NULL;
     jfieldID    JSVM_deadJSObjectsRefs = NULL;
+    jfieldID    JSVM_callableAllocator = NULL;
 
     jclass      JSObjectWeakReference_Class = NULL;
     jmethodID   JSObjectWeakReference_ctor = NULL;
@@ -57,6 +58,12 @@ namespace jsvm {
 
     jclass      JSFunction_Class = NULL;
     jmethodID   JSFunction_ctor = NULL;
+
+    jclass      HandleAllocator_Class = NULL;
+    jmethodID   HandleAllocator_get = NULL;
+
+    jclass      JSCallable_Class = NULL;
+    jmethodID   JSCallable_call = NULL;
 }
 
 using namespace jsvm;
@@ -93,6 +100,7 @@ void ::jsvm::initClassesAndFields(JNIEnv *env) {
     JSVM_hPriv = env->GetFieldID(JSVM_Class, "hPriv", "J");
     JSVM_jsObjectsByHandle = env->GetFieldID(JSVM_Class, "jsObjectsByHandle", "Ljava/util/ArrayList;");
     JSVM_deadJSObjectsRefs = env->GetFieldID(JSVM_Class, "deadJSObjectsRefs", "Ljava/lang/ref/ReferenceQueue;");
+    JSVM_callableAllocator = env->GetFieldID(JSVM_Class, "callableAllocator", "Lme/ntrrgc/jsvm/HandleAllocator;");
 
     JSObjectWeakReference_Class = findClass(env, "me/ntrrgc/jsvm/JSObjectWeakReference");
     JSObjectWeakReference_ctor = env->GetMethodID(JSObjectWeakReference_Class, "<init>",
@@ -140,6 +148,13 @@ void ::jsvm::initClassesAndFields(JNIEnv *env) {
 
     JSFunction_Class = findClass(env, "me/ntrrgc/jsvm/JSFunction");
     JSFunction_ctor = env->GetMethodID(JSFunction_Class, "<init>", "(Lme/ntrrgc/jsvm/JSVM;I)V");
+
+    HandleAllocator_Class = findClass(env, "me/ntrrgc/jsvm/HandleAllocator");
+    HandleAllocator_get = env->GetMethodID(HandleAllocator_Class, "get", "(I)Ljava/lang/Object;");
+
+    JSCallable_Class = findClass(env, "me/ntrrgc/jsvm/JSCallable");
+    JSCallable_call = env->GetMethodID(JSCallable_Class, "call",
+         "([Lme/ntrrgc/jsvm/JSValue;Lme/ntrrgc/jsvm/JSValue;Lme/ntrrgc/jsvm/JSVM;)Lme/ntrrgc/jsvm/JSValue;");
 }
 
 

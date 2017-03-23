@@ -20,6 +20,7 @@ namespace jsvm {
     extern jfieldID     JSVM_hPriv;
     extern jfieldID     JSVM_jsObjectsByHandle;
     extern jfieldID     JSVM_deadJSObjectsRefs;
+    extern jfieldID     JSVM_callableAllocator;
 
     extern jclass       JSObjectWeakReference_Class;
     extern jmethodID    JSObjectWeakReference_ctor;
@@ -61,6 +62,12 @@ namespace jsvm {
     extern jclass       JSFunction_Class;
     extern jmethodID    JSFunction_ctor;
 
+    extern jclass       HandleAllocator_Class;
+    extern jmethodID    HandleAllocator_get;
+
+    extern jclass       JSCallable_Class;
+    extern jmethodID    JSCallable_call;
+
     class _JSObjectWeakReference: public _jobject {};
     typedef _JSObjectWeakReference* JSObjectWeakReference;
 
@@ -69,6 +76,12 @@ namespace jsvm {
 
     class _ReferenceQueue: public _jobject {};
     typedef _ReferenceQueue* ReferenceQueue;
+
+    class _HandleAllocator: public _jobject {};
+    typedef _HandleAllocator* HandleAllocator;
+
+    class _JSCallable: public _jobject {};
+    typedef _JSCallable* JSCallable;
 
     void initClassesAndFields(JNIEnv *env);
     void tearDownClassesAndFields(JNIEnv *env);

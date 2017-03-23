@@ -9,3 +9,6 @@
 
 // Used by the ObjectBook
 #define GLOBAL_STASH_INDEX_OBJECT_BOOK 0
+
+// Used to create trampoline functions in Duktape that invoke JSCallable
+#define GLOBAL_STASH_INDEX_TRAMPOLINE_FACTORY 1

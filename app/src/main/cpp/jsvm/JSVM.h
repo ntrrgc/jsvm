@@ -16,6 +16,9 @@ namespace jsvm {
     class _JSVM : public _jobject {};
     typedef _JSVM* JSVM;
 
+    class JSVMPriv;
+    extern thread_local JSVMPriv* thisThreadJSVMPriv;
+
     /**
      * This class stores and manages JSVM internals.
      *
@@ -56,6 +59,7 @@ namespace jsvm {
          * JSVM instances are synchronized.
          */
         void load(JNIEnv *env, JSVM jsVM) {
+            thisThreadJSVMPriv = this;
             this->env = env;
             this->jsVM = jsVM;
             this->jsObjectsByHandle = (ArrayList)
