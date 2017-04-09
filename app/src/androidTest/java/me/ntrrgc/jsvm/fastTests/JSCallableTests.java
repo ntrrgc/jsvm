@@ -98,4 +98,38 @@ public class JSCallableTests {
         jsvm.evaluate("fun({x: 3})");
     }
 
+    @Test
+    public void severalNestedEvaluations() throws Exception {
+        JSFunction jsFunction = jsvm.function(new JSCallable() {
+            @NotNull
+            @Override
+            public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
+                assertEquals(2, jsvm.evaluate("({a:2})").asObject().get("a").asInt());
+                assertEquals(3, jsvm.evaluate("({a:3})").asObject().get("a").asInt());
+                return jsvm.evaluate("({a:4})");
+            }
+        });
+        jsvm.getGlobalScope().set("fun", JSValue.anObject(jsFunction));
+        assertEquals(4, jsvm.evaluate("fun()").asObject().get("a").asInt());
+    }
+
+    @Test
+    public void severalNestedEvaluationsThenException() throws Exception {
+        JSFunction jsFunction = jsvm.function(new JSCallable() {
+            @NotNull
+            @Override
+            public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
+                assertEquals(2, jsvm.evaluate("({a:2})").asObject().get("a").asInt());
+                assertEquals(3, jsvm.evaluate("({a:3})").asObject().get("a").asInt());
+                throw new RuntimeException("Oops");
+            }
+        });
+        jsvm.getGlobalScope().set("fun", JSValue.anObject(jsFunction));
+        try {
+            jsvm.evaluate("fun()");
+            fail();
+        } catch (JSError jsError) {
+            assertEquals("Java callable threw an exception: Oops", jsError.getMessage());
+        }
+    }
 }
