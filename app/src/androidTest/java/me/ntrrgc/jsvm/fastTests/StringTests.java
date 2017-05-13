@@ -10,6 +10,7 @@ import org.junit.runner.RunWith;
 import me.ntrrgc.jsvm.JSObject;
 import me.ntrrgc.jsvm.JSVM;
 import me.ntrrgc.jsvm.JSValue;
+import me.ntrrgc.mylibrary.Miau;
 
 import static org.junit.Assert.assertEquals;
 
