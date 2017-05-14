@@ -1,1 +1,1 @@
-include ':app', ':mylibrary'
+include ':manualTests', ':jsvm-lib'
