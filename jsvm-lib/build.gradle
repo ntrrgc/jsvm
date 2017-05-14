@@ -40,3 +40,7 @@ dependencies {
     compile 'org.jetbrains:annotations-java5:15.0'
     testCompile 'junit:junit:4.12'
 }
+
+apply plugin: 'com.github.dcendents.android-maven'
+
+group = 'com.github.ntrrgc'
