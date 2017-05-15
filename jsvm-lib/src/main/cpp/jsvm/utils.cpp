@@ -3,8 +3,6 @@
 //
 
 
-#include "../../../../../../../../Android/Sdk/ndk-bundle/platforms/android-21/arch-mips64/usr/include/jni.h"
-#include <duktape/duk_config.h>
 #include "utils.h"
 #include <sstream>
 #include <iomanip>
