@@ -8,6 +8,22 @@ You can also expose Java objects to JS, enabling your JS code to call specific J
 
 Using JSVM you can embed JavaScript code in your Android or Java application, which can be useful in a variety of scenarios, such as multi-platform development where most of the code is written in JS in order to be run both in Android and iOS, plugin systems, or reusing existing JavaScript libraries.
 
+## Installation (Android)
+
+You can install this library from [JitPack](https://jitpack.io/#ntrrgc/jsvm). Add this to your `build.gradle`:
+
+```
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    compile 'com.github.ntrrgc:jsvm:master-SNAPSHOT'
+}
+```
+
+You can change `SNAPSHOT` for an specific commit hash to get a fixed version of the library.
+
 ## How does it look?
 
 Simple usage evaluating expressions:
