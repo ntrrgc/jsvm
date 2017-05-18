@@ -20,7 +20,7 @@ SET(CMAKE_VERBOSE_MAKEFILE "ON")
 # set_source_files_properties(src/main/cpp/duktape/duktape.c PROPERTIES LANGUAGE CXX)
 
 add_library( # Sets the name of the library.
-             native-lib
+             jsvm
 
              # Sets the library as a shared library.
              SHARED
@@ -54,3 +54,18 @@ add_library( # Sets the name of the library.
              )
 
 include_directories(src/main/cpp)
+
+# When building inside the Android NDK, JNI is not found as a package, but JNI it's nevertheless
+# in the include path and somehow works without adding linking directives, so we're
+# making it an optional dependency.
+#
+# Note it's still necessary in order to build on desktop platforms.
+find_package(JNI)
+
+
+if (JNI_FOUND)
+    message (STATUS "JNI_INCLUDE_DIRS=${JNI_INCLUDE_DIRS}")
+    message (STATUS "JNI_LIBRARIES=${JNI_LIBRARIES}")
+    include_directories (${JNI_INCLUDE_DIRS})
+    target_link_libraries (jsvm ${JNI_LIBRARIES})
+endif()
