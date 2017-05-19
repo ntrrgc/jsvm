@@ -1,20 +1,13 @@
 package me.ntrrgc.jsvm;
 
-import android.support.test.runner.AndroidJUnit4;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 
-import me.ntrrgc.jsvm.JSObject;
-import me.ntrrgc.jsvm.JSVM;
-
 import static org.junit.Assert.assertEquals;
 
-@RunWith(AndroidJUnit4.class)
 public class JSObjectIdentityRace {
     private JSVM jsvm;
 
