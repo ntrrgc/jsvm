@@ -24,6 +24,8 @@ dependencies {
 
 You can change `SNAPSHOT` for an specific commit hash to get a fixed version of the library.
 
+The wiki includes [instructions to build the library](https://github.com/ntrrgc/jsvm/wiki/Building-JSVM) in your own computer for development or to use it in a non-Android Java environment.
+
 ## How does it look?
 
 Simple usage evaluating expressions:
