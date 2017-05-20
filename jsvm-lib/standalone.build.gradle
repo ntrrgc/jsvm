@@ -4,6 +4,25 @@ repositories {
     jcenter()
 }
 
+sourceSets {
+    main {
+        java {
+            srcDirs = ["src/main/java"]
+        }
+    }
+    test {
+        java {
+            srcDirs = ["src/androidTest/java"]
+        }
+    }
+}
+
+tasks.withType(JavaCompile) {
+    // When a deprecated API is used, tell me which it is!
+    options.compilerArgs << "-Xlint:deprecation"
+}
+
 dependencies {
     compile 'org.jetbrains:annotations-java5:15.0'
+    testCompile 'junit:junit:4.12'
 }
