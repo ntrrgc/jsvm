@@ -27,7 +27,7 @@ public final class JSValue {
     }
 
     @NotNull
-    JSValue lateInitAccessorChain(@NotNull AccessorChain accessorChain) {
+    /* package */ final JSValue lateInitAccessorChain(@NotNull AccessorChain accessorChain) {
         if (accessorChain == null) throw new AssertionError();
         // Set it in this JSValue so that it can be read by InvalidJSValueType constructor in case
         // of a type error.
@@ -43,7 +43,7 @@ public final class JSValue {
     }
 
     @NotNull
-    JSValue lateInitAccessorChainDefault() {
+    /* package */ final JSValue lateInitAccessorChainDefault() {
         if (this.isObject()) {
             JSObject obj = this.asObject();
             obj.lateInitAccessorChain(new ClassChainRoot(obj.getRepresentableClassName()));

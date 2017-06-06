@@ -28,7 +28,7 @@ public final class JSError extends RuntimeException {
     }
 
     @NotNull
-    public JSValue getErrorValue() {
+    public final JSValue getErrorValue() {
         return errorValue;
     }
 

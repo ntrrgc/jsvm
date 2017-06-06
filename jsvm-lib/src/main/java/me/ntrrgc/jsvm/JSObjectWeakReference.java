@@ -7,7 +7,7 @@ import java.lang.ref.WeakReference;
  * Created by ntrrgc on 1/29/17.
  */
 
-final class JSObjectWeakReference extends WeakReference<JSObject> {
+/* package */ final class JSObjectWeakReference extends WeakReference<JSObject> {
     // Read in JNI
     private int handle;
 

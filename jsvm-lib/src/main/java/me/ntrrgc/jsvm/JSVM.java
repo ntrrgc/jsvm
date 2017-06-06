@@ -26,14 +26,14 @@ public class JSVM {
     /**
      * Initializes the JNI-side.
      */
-    public static native void initializeLibrary();
+    public final static native void initializeLibrary();
 
     /**
      * Called to tear down the library.
      *
      * TODO This should not be public and only be called if the library is unloaded.
      */
-    public static native void destroyLibrary();
+    public final static native void destroyLibrary();
 
     /**
      * JSVMPriv* (contains duk_context* and other implementation fields)
@@ -48,7 +48,7 @@ public class JSVM {
      *
      * Accessed from JNI.
      */
-    private ArrayList<JSObjectWeakReference> jsObjectsByHandle = new ArrayList<>();
+    private final ArrayList<JSObjectWeakReference> jsObjectsByHandle = new ArrayList<>();
 
     /**
      * When JSObjects are GCed, their {@link JSObjectWeakReference},
@@ -59,7 +59,7 @@ public class JSVM {
      *
      * Accessed from JNI.
      */
-    private ReferenceQueue<JSObject> deadJSObjectsRefs = new ReferenceQueue<>();
+    private final ReferenceQueue<JSObject> deadJSObjectsRefs = new ReferenceQueue<>();
 
     /**
      * Synchronization monitor used so that two threads never
@@ -67,12 +67,12 @@ public class JSVM {
      */
     /* package */ final Object lock = new Object();
 
-    final boolean accessorChainsEnabled;
+    /* package */ final boolean accessorChainsEnabled;
 
     /**
      * Manages Java callables accessible from JS.
      */
-    private HandleAllocator<JSCallable> callableAllocator = new HandleAllocator<>();
+    private final HandleAllocator<JSCallable> callableAllocator = new HandleAllocator<>();
 
 
     // Dummy method used in some performance tests to measure JNI overhead.
@@ -91,7 +91,7 @@ public class JSVM {
     }
 
     @NotNull
-    public JSValue evaluate(String code) {
+    public final JSValue evaluate(String code) {
         synchronized (this.lock) {
             return evaluateNative(code)
                     .lateInitAccessorChain(new EvalExpressionChainRoot(code));
@@ -100,7 +100,7 @@ public class JSVM {
     private native JSValue evaluateNative(String code);
 
     /* package */ boolean finalized = false;
-    protected void finalize() {
+    protected final void finalize() {
         synchronized (this.lock) {
             this.finalizeNative();
             finalized = true;
@@ -108,14 +108,14 @@ public class JSVM {
     }
     private native void finalizeNative();
 
-    public int getStackFrameSize() {
+    public final int getStackFrameSize() {
         synchronized (this.lock) {
             return this.getStackFrameSizeNative();
         }
     }
     private native int getStackFrameSizeNative();
 
-    public int getStackSize() {
+    public final int getStackSize() {
         synchronized (this.lock) {
             return this.getStackSizeNative();
         }
@@ -128,7 +128,7 @@ public class JSVM {
      * @return the JS object backing the global scope.
      */
     @NotNull
-    public JSObject getGlobalScope() {
+    public final JSObject getGlobalScope() {
         synchronized (this.lock) {
             JSObject global = this.getGlobalScopeNative();
             if (accessorChainsEnabled) {
@@ -147,7 +147,7 @@ public class JSVM {
      * @return The newly created object.
      */
     @NotNull
-    public JSObject newObject() {
+    public final JSObject newObject() {
         synchronized (this.lock) {
             JSObject obj = this.newObjectNative();
             if (accessorChainsEnabled) {
@@ -168,7 +168,7 @@ public class JSVM {
      * @return The newly created object.
      */
     @NotNull
-    public JSObject newObjectWithProto(@Nullable JSObject proto) {
+    public final JSObject newObjectWithProto(@Nullable JSObject proto) {
         synchronized (this.lock) {
             JSObject obj = this.newObjectNativeWithProto(proto);
             if (accessorChainsEnabled) {
@@ -180,7 +180,7 @@ public class JSVM {
     private native JSObject newObjectNativeWithProto(JSObject proto);
 
     @NotNull
-    public JSFunction function(@NotNull JSCallable callable) {
+    public final JSFunction function(@NotNull JSCallable callable) {
         synchronized (this.lock) {
             int callableHandle = callableAllocator.allocate(callable);
 

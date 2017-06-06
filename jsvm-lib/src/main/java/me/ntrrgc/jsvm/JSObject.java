@@ -20,14 +20,14 @@ public class JSObject implements Closeable {
     AccessorChain accessorChain;
 
     @NotNull
-    JSObject lateInitAccessorChain(@NotNull AccessorChain accessorChain) {
+    /* package */ final JSObject lateInitAccessorChain(@NotNull AccessorChain accessorChain) {
         // Note: may be initialized more than once if the same object is retrieved in several ways.
         // The latest one persists.
         this.accessorChain = accessorChain;
         return this;
     }
 
-    boolean isStillAlive() {
+    /* package */ final boolean isStillAlive() {
         return aliveHandle && !jsVM.finalized;
     }
 
@@ -37,7 +37,7 @@ public class JSObject implements Closeable {
     }
 
     @NotNull
-    public JSValue get(@NotNull String key) {
+    public final JSValue get(@NotNull String key) {
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
             JSValue ret = getByKeyNative(jsVM, handle, key);
@@ -51,7 +51,7 @@ public class JSObject implements Closeable {
     private native JSValue getByKeyNative(JSVM jsVM, int handle, String key);
 
     @NotNull
-    public JSValue get(int index) {
+    public final JSValue get(int index) {
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
             JSValue ret = getByIndexNative(jsVM, handle, index);
@@ -64,7 +64,7 @@ public class JSObject implements Closeable {
     }
     private native JSValue getByIndexNative(JSVM jsVM, int handle, int index);
 
-    public void set(@NotNull String key, @NotNull JSValue value) {
+    public final void set(@NotNull String key, @NotNull JSValue value) {
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
             setByKeyNative(jsVM, handle, key, value);
@@ -72,7 +72,7 @@ public class JSObject implements Closeable {
     }
     private native void setByKeyNative(JSVM jsVM, int handle, String key, JSValue value);
 
-    public void set(int index, @NotNull JSValue value) {
+    public final void set(int index, @NotNull JSValue value) {
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
             setByIndexNative(jsVM, handle, index, value);
@@ -80,7 +80,7 @@ public class JSObject implements Closeable {
     }
     private native void setByIndexNative(JSVM jsVM, int handle, int index, JSValue value);
 
-    public boolean contains(@NotNull String key) {
+    public final boolean contains(@NotNull String key) {
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
             return containsByKeyNative(jsVM, handle, key);
@@ -88,7 +88,7 @@ public class JSObject implements Closeable {
     }
     private native boolean containsByKeyNative(JSVM jsVM, int handle, String key);
 
-    public boolean contains(int index) {
+    public final boolean contains(int index) {
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
             return containsByIndexNative(jsVM, handle, index);
@@ -96,12 +96,12 @@ public class JSObject implements Closeable {
     }
     private native boolean containsByIndexNative(JSVM jsVM, int handle, int index);
 
-    public JSValue invokeMethod(@NotNull String methodName, @NotNull JSValue... args) {
+    public final JSValue invokeMethod(@NotNull String methodName, @NotNull JSValue... args) {
         JSFunction methodFunction = this.get(methodName).asFunction();
         return methodFunction.call(JSValue.anObject(this), args);
     }
 
-    public String toString() {
+    public final String toString() {
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
             return this.toStringNative(jsVM, handle);
@@ -109,7 +109,7 @@ public class JSObject implements Closeable {
     }
     private native String toStringNative(JSVM jsVM, int handle);
 
-    public void close() {
+    public final void close() {
         synchronized (jsVM.lock) {
             // If the entire VM was already destroyed in this
             // same GC cycle there is no point in trying to
@@ -141,7 +141,7 @@ public class JSObject implements Closeable {
      * @return The name of the constructor function, or null if it could not be retrieved.
      */
     @Nullable
-    public String getClassName() {
+    public final String getClassName() {
         synchronized (jsVM.lock) {
             if (!isStillAlive()) throw new UsedFinalizedJSObject(this);
             try {
@@ -159,7 +159,7 @@ public class JSObject implements Closeable {
      * @return A printable class name.
      */
     @NotNull
-    String getRepresentableClassName() {
+    /* package */ final String getRepresentableClassName() {
         String className = getClassName();
         if (className != null) {
             return className;

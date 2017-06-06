@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * Created by ntrrgc on 1/23/17.
  */
-public class JSTypeError extends AssertionError {
+public final class JSTypeError extends AssertionError {
     public final JSValue value;
 
     @NotNull

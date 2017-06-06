@@ -9,7 +9,7 @@ import java.util.Stack;
  * Created by ntrrgc on 3/23/17.
  */
 
-class HandleAllocator<T> {
+/* package */ class HandleAllocator<T> {
     private ArrayList<T> items = new ArrayList<>();
     private Stack<Integer> freeList = new Stack<>();
     private int nextHandle = 0;
