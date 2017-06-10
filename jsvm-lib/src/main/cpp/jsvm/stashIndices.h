@@ -12,3 +12,6 @@
 
 // Used to create trampoline functions in Duktape that invoke JSCallable
 #define GLOBAL_STASH_INDEX_TRAMPOLINE_FACTORY 1
+
+// Used to generate the finalizer callbacks that are attached to Java functions exposed in JS
+#define GLOBAL_STASH_INDEX_FINALIZE_FACTORY 2

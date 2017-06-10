@@ -72,8 +72,14 @@ public class JSVM {
     /**
      * Manages Java callables accessible from JS.
      */
-    private final HandleAllocator<JSCallable> callableAllocator = new HandleAllocator<>();
+    /* package */ final HandleAllocator<JSCallable> callableAllocator = new HandleAllocator<>();
 
+    /**
+     * Called from JNI to unref Java callables GCed in JS.
+     */
+    private void finalizeCallable(int callableHandle) {
+        callableAllocator.free(callableHandle);
+    }
 
     // Dummy method used in some performance tests to measure JNI overhead.
     public static native double returnADouble();

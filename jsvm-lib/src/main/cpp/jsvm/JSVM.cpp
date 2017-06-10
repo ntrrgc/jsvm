@@ -184,10 +184,19 @@ Java_me_ntrrgc_jsvm_JSVM_newFunctionNative(JNIEnv *env, jobject instance, jint c
 
     return JSVMPriv_invokeSafe<JSObject>(priv, [priv, env, jsVM, callableHandle] (duk_context *ctx) {
 
+        // Create the trampoline JS function
         duk_push_global_stash(ctx);
         duk_get_prop_index(ctx, -1, GLOBAL_STASH_INDEX_TRAMPOLINE_FACTORY);
         duk_push_int(ctx, callableHandle);
         duk_call(ctx, 1);
+
+        // Generate a finalizer for the trampoline JS function
+        duk_get_prop_index(ctx, -2, GLOBAL_STASH_INDEX_FINALIZE_FACTORY);
+        duk_push_int(ctx, callableHandle);
+        duk_call(ctx, 1);
+
+        // Attach the finalizer to the function
+        duk_set_finalizer(ctx, -2);
 
         JSFunction retFunction = (JSFunction) priv->objectBook.exposeObject(env, -1);
 
@@ -261,6 +270,21 @@ static duk_ret_t JSVM_dukMakeNativeCall(duk_context *ctx) {
     }
 }
 
+/**
+ * Called as a Duktape function to finalize JSCallable.
+ */
+static duk_ret_t JSVM_dukFinalizeNativeCallable(duk_context *ctx) {
+    JSVMPriv* priv = thisThreadJSVMPriv;
+    JSVM jsVM = priv->jsVM;
+    JNIEnv* env = priv->env;
+
+    jint callableHandle = duk_require_int(ctx, 0);
+
+    env->CallVoidMethod(jsVM, JSVM_finalizeCallable, callableHandle);
+
+    return 0; // return undefined
+}
+
 JSVMPriv::JSVMPriv(JNIEnv *initialJNIEnv, JSVM initialJSVM)
         : env(initialJNIEnv), jsVM(initialJSVM)
 {
@@ -299,6 +323,20 @@ JSVMPriv::JSVMPriv(JNIEnv *initialJNIEnv, JSVM initialJSVM)
     duk_call(ctx, 1);
     // _jsvmTrampolineFactory is now at the top of the stack, save it in the stash
     duk_put_prop_index(ctx, -2, GLOBAL_STASH_INDEX_TRAMPOLINE_FACTORY);
+
+    // Initialize the callable finalizer factory function
+    duk_eval_string(ctx,
+            "(function _jsvmFinalizeCallableFactoryFactory(finalizeFn) {\n"
+                "return function _jsvmFinalizeCallableFactory(callableHandle) {\n"
+                    "return function _jsvmFinalizeCallable() {\n"
+                        "finalizeFn(callableHandle);\n"
+                    "};\n"
+                "};\n"
+            "})");
+    duk_push_c_function(ctx, JSVM_dukFinalizeNativeCallable, 1);
+    duk_call(ctx, 1);
+    duk_put_prop_index(ctx, -2, GLOBAL_STASH_INDEX_FINALIZE_FACTORY);
+
     duk_pop(ctx); // pop the stash
 
     this->objectBook.lateInit(ctx, this);
