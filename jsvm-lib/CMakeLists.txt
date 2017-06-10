@@ -69,3 +69,8 @@ if (JNI_FOUND)
     include_directories (${JNI_INCLUDE_DIRS})
     target_link_libraries (jsvm ${JNI_LIBRARIES})
 endif()
+
+if (WIN32)
+    message (STATUS "Windows OS detected: Compiling with static libstdc++.")
+    set (CMAKE_SHARED_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
+endif()
