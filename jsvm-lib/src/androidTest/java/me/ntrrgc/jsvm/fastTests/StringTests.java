@@ -56,6 +56,7 @@ public class StringTests {
     @Test
     public void testCatGrinningFromJS() throws Exception {
         assertEquals("\uD83D\uDE3A", jsvm.evaluate("'\\uD83D\\uDE3A'").asString());
+        assertEquals("\uD83D\uDE3A".length(), jsvm.evaluate("'\\uD83D\\uDE3A'").asString().length());
     }
 
     @Test
