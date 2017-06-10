@@ -38,6 +38,7 @@ public class StringTests {
     @Test
     public void testSnowmanFromJS() throws Exception {
         assertEquals("☃", jsvm.evaluate("'☃'").asString());
+        assertEquals(1, jsvm.evaluate("'☃'").asString().length());
     }
 
     @Test
