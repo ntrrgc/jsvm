@@ -73,4 +73,7 @@ endif()
 if (WIN32)
     message (STATUS "Windows OS detected: Compiling with static libstdc++.")
     set (CMAKE_SHARED_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
+
+    # On Windows, generate jsvm.dll instead of libjsvm.dll
+    set (CMAKE_SHARED_LIBRARY_PREFIX "")
 endif()
