@@ -1,4 +1,4 @@
-**Important:** This project is still under heavy development. Some features mentioned here are not yet implemented, the API may have breaking changes every so often and I've still not decided on a license. Still, I'm leaving this README here so that the purpose of the project can be understood.
+**Important:** This project is still under heavy development. Some features mentioned here are not yet implemented and the API may have breaking changes every so often. Still, I'm leaving this README here so that the purpose of the project can be understood.
 
 <hr/>
 
@@ -108,3 +108,7 @@ Duktape has not a bad API for a JS engine and it's quite powerful in fact... But
 # JSVM internals
 
 [You can find more about how JSVM works in the wiki.](https://github.com/ntrrgc/jsvm/wiki)
+
+# License
+
+All files contained within this repository are licensed under the terms of the [Mozilla Public License 2.0](LICENSE.txt) unless stated otherwise.
