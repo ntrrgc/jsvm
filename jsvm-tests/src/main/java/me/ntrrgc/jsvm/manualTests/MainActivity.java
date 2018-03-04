@@ -9,17 +9,14 @@ package me.ntrrgc.jsvm.manualTests;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
 
-import java.io.IOException;
-
 import me.ntrrgc.jsvm.manualTests.performanceTests.PerformanceTests;
-import me.ntrrgc.jsvm.manualTests.R;
+import me.ntrrgc.jsvm.R;
 
 public class MainActivity extends AppCompatActivity {
     @Override
