@@ -18,7 +18,8 @@ repositories {
 }
 
 dependencies {
-    compile 'com.github.ntrrgc:jsvm:master-SNAPSHOT'
+    implementation 'com.github.ntrrgc.jsvm:jsvm-lib:master-SNAPSHOT' // Java classes
+    implementation 'com.github.ntrrgc.jsvm:jsvm-native:master-SNAPSHOT' // Native library (.so)
 }
 ```
 
