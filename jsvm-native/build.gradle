@@ -1,0 +1,51 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 27
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 27
+        versionCode 1
+        versionName "1.0"
+
+        ndk {
+            // clang crashes when building for MIPS at least since NDK 14.0.3529234 rc1
+            // https://github.com/android-ndk/ndk/issues/290
+            // https://github.com/android-ndk/ndk/issues/314
+//            abiFilters 'armeabi', 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64', 'mips64' // 'mips'
+            abiFilters 'x86'
+        }
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++11 -fexceptions"
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+
+    libraryVariants.all {
+        it.generateBuildConfig.enabled = false
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+}
+
+apply plugin: 'com.github.dcendents.android-maven'
+
+group = 'com.github.ntrrgc'
