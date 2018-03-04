@@ -1,1 +1,1 @@
-include ':jsvm-native', ':manualTests', ':jsvm-lib'
+include ':jsvm-native', ':manualTests', ':jsvm-lib', ':jsvm-tests'

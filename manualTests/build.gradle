@@ -26,13 +26,14 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    testCompile 'junit:junit:4.12'
-    androidTestCompile 'commons-io:commons-io:2.5'
-    compile 'commons-io:commons-io:2.5'
-    compile 'org.jetbrains:annotations-java5:15.0'
-    compile project(':jsvm-lib')
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'commons-io:commons-io:2.5'
+    implementation 'com.android.support:appcompat-v7:27.1.0'
+    implementation 'commons-io:commons-io:2.5'
+    implementation 'org.jetbrains:annotations-java5:15.0'
+    implementation project(':jsvm-lib')
 }
