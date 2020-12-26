@@ -17,6 +17,7 @@
 #include <stdexcept>
 #include <memory>
 #include <utility>
+#include <string>
 
 #include "jsvm/exceptions.h"
 #include "jsvm/javaClasses.h"
