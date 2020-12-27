@@ -97,7 +97,7 @@ public class JSCallableTests {
     }
 
     @Test
-    public void severalNestedEvaluations() throws Exception {
+    public void jsCallsJavaCallsJS() throws Exception {
         JSFunction jsFunction = jsvm.function(new JSCallable() {
             @NotNull
             @Override
@@ -112,7 +112,7 @@ public class JSCallableTests {
     }
 
     @Test
-    public void severalNestedEvaluationsThenException() throws Exception {
+    public void jsCallsJavaCallsJS_ExceptionInsideJS() throws Exception {
         JSFunction jsFunction = jsvm.function(new JSCallable() {
             @NotNull
             @Override
@@ -129,5 +129,92 @@ public class JSCallableTests {
         } catch (JSError jsError) {
             assertEquals("Java callable threw an exception: Oops", jsError.getMessage());
         }
+    }
+
+    @Test
+    public void jsCallsJavaCallsJSCallsJava() throws Exception {
+        jsvm.getGlobalScope().set("simpleJavaFunction", JSValue.anObject(jsvm.function(new JSCallable() {
+            @NotNull
+            @Override
+            public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
+                if (args.length != 1) {
+                    throw new RuntimeException("Invalid args");
+                }
+                if (args[0].asInt() == 0) {
+                    return JSValue.aString("Hello");
+                } else {
+                    return JSValue.aString("World");
+                }
+            }
+        })));
+
+        jsvm.getGlobalScope().set("jsFunction", jsvm.evaluate("" +
+                "(function jsFunction() {" +
+                "    return simpleJavaFunction(0) + ' ' + simpleJavaFunction(1);" +
+                "})"));
+
+        jsvm.getGlobalScope().set("complexJavaFunction", JSValue.anObject(jsvm.function(new JSCallable() {
+            @NotNull
+            @Override
+            public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
+                return jsvm.evaluate("jsFunction()");
+            }
+        })));
+
+        assertEquals("Hello World", jsvm.evaluate("complexJavaFunction()").asString());
+    }
+
+    @Test
+    public void jsCallsJavaCallsDifferentJSVMThenJS() throws Exception {
+        final JSVM otherJSVM = new JSVM();
+        otherJSVM.getGlobalScope().set("hello", JSValue.anObject(otherJSVM.function(new JSCallable() {
+            @NotNull
+            @Override
+            public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
+                return JSValue.aString("Hello");
+            }
+        })));
+
+        jsvm.getGlobalScope().set("world", JSValue.anObject(jsvm.function(new JSCallable() {
+            @NotNull
+            @Override
+            public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
+                return JSValue.aString("World");
+            }
+        })));
+
+        jsvm.getGlobalScope().set("helloWorld", JSValue.anObject(jsvm.function(new JSCallable() {
+            @NotNull
+            @Override
+            public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
+                String part1 = otherJSVM.evaluate("hello()").asString();
+                String part2 = jsvm.evaluate("world()").asString();
+                return JSValue.aString(part1 + " " + part2);
+            }
+        })));
+
+        assertEquals("Hello World", jsvm.evaluate("helloWorld()").asString());
+    }
+
+    @Test
+    public void jsCallsJavaWhichUsesDifferentJSVMThenCallsJavaAgain() throws Exception {
+        jsvm.getGlobalScope().set("hello", JSValue.anObject(jsvm.function(new JSCallable() {
+            @NotNull
+            @Override
+            public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
+                String hello = new JSVM().evaluate("'Hello'").asString();
+                return JSValue.aString(hello);
+            }
+        })));
+
+        jsvm.getGlobalScope().set("world", JSValue.anObject(jsvm.function(new JSCallable() {
+            @NotNull
+            @Override
+            public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
+                return JSValue.aString("World");
+            }
+        })));
+
+        jsvm.evaluate("hello() + world()");
     }
 }

@@ -30,8 +30,9 @@ using namespace jsvm;
  * (corrupted strings can only be created in C++ code).
  */
 JSValue
-jsvm::JSValue_createFromStack(JNIEnv *env, JSVM jsVM, int stackPosition) {
-    JSVMPriv *priv = JSVM_getPriv(env, jsVM);
+jsvm::JSValue_createFromStack(JSVMCallContext& jcc, int stackPosition) {
+    JNIEnv* env = jcc.jniEnv();
+    JSVMPriv* priv = jcc.priv();
     duk_context *ctx = priv->ctx;
 
     duk_int_t dukType = duk_get_type(ctx, stackPosition);
@@ -61,7 +62,7 @@ jsvm::JSValue_createFromStack(JNIEnv *env, JSVM jsVM, int stackPosition) {
             break; }
         case DUK_TYPE_OBJECT:
             valueType = JSVALUE_TYPE_OBJECT;
-            boxedValue = priv->objectBook.exposeObject(env, stackPosition);
+            boxedValue = priv->objectBook.exposeObject(jcc, stackPosition);
             break;
         default:
             valueType = JSVALUE_TYPE_UNSUPPORTED;
@@ -75,6 +76,8 @@ jsvm::JSValue_createFromStack(JNIEnv *env, JSVM jsVM, int stackPosition) {
 }
 
 /**
+ * Push the content of JSValue into the Duktape stack.
+ *
  * May throw:
  * - AttemptedToUseObjectFromOtherVM
  * - IllegalArgumentException
@@ -103,7 +106,7 @@ jsvm::JSValue_push(JNIEnv *env, JSValue jsValue, duk_context *ctx) {
         case JSVALUE_TYPE_OBJECT: {
             JSObject jsObject = (JSObject) boxedValue;
             JSVM jsObjectVM = (JSVM) env->GetObjectField(jsObject, JSObject_jsVM);
-            duk_context* objectContext = JSVM_getPriv(env, jsObjectVM)->ctx;
+            duk_context* objectContext = JSVM_peekPriv(env, jsObjectVM)->ctx;
 
             if (objectContext != ctx) {
                 throw AttemptedToUseObjectFromOtherVM(env, jsObject, jsObjectVM);

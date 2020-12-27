@@ -18,17 +18,41 @@
 
 using namespace jsvm;
 
-thread_local JSVMPriv* jsvm::thisThreadJSVMPriv = NULL;
+thread_local std::stack<JSVMCallContext*> JSVMCallContext::s_thisThreadStack;
 
-/**
- * Get a JSVMPriv object with its JNIEnv and JSVM pointers
- * already set so that Duktape functions can be called safely.
- */
+/** Get the JSVMPriv from a JSVM object.
+ * In situations where a JS code will be run this function should not be
+ * used directly, opting instead for JSVMCallContext so that the JSVM
+ * pointers can be retrieved if JS needs to call Java code. */
 JSVMPriv *
-jsvm::JSVM_getPriv(JNIEnv *env, JSVM jsVM) {
-    JSVMPriv* priv = (JSVMPriv *) env->GetLongField(jsVM, JSVM_hPriv);
-    priv->load(env, jsVM);
-    return priv;
+jsvm::JSVM_peekPriv(JNIEnv *env, JSVM jsVM) {
+    return (JSVMPriv *) env->GetLongField(jsVM, JSVM_hPriv);
+}
+
+JSVMCallContext::JSVMCallContext(JNIEnv *jniEnv, JSVM jsVM)
+    : m_jniEnv(jniEnv)
+    , m_jsVM(jsVM)
+{
+    m_priv = JSVM_peekPriv(jniEnv, jsVM);
+    s_thisThreadStack.push(this);
+}
+
+JSVMCallContext::~JSVMCallContext() {
+    jsvm_assert(s_thisThreadStack.top() == this);
+    s_thisThreadStack.pop();
+}
+
+JSVMCallContext&
+JSVMCallContext::current() {
+    jsvm_assert(!s_thisThreadStack.empty());
+    return *s_thisThreadStack.top();
+}
+
+ArrayList JSVMCallContext::jsObjectsByHandle() {
+    if (!m_jsObjectsByHandle)
+        m_jsObjectsByHandle = (ArrayList) m_jniEnv->GetObjectField(m_jsVM, JSVM_jsObjectsByHandle);
+    jsvm_assert(m_jsObjectsByHandle);
+    return m_jsObjectsByHandle;
 }
 
 extern "C" {
@@ -54,11 +78,12 @@ Java_me_ntrrgc_jsvm_JSVM_destroyLibrary(JNIEnv *env, jclass type) {
 JNIEXPORT void JNICALL
 Java_me_ntrrgc_jsvm_JSVM_nativeInit(JNIEnv *env, jobject instance) {
     JSVM jsVM = (JSVM) instance;
-    JSVMPriv *priv = new JSVMPriv(env, jsVM);
+    JSVMPriv *priv = new JSVMPriv();
 
     if (priv->ctx != NULL) {
         env->SetLongField(instance, JSVM_hPriv, (jlong) priv);
     } else {
+        delete priv;
         env->ThrowNew(JSVMInternalError_Class, "Failed to create JS heap");
     }
 }
@@ -67,19 +92,20 @@ JNIEXPORT void JNICALL
 Java_me_ntrrgc_jsvm_JSVM_finalizeNative(JNIEnv *env, jobject instance) {
     JSVM jsVM = (JSVM) instance;
 
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMPriv* priv = JSVM_peekPriv(env, jsVM);
     delete priv;
 }
 
 JNIEXPORT jobject JNICALL
 Java_me_ntrrgc_jsvm_JSVM_evaluateNative(JNIEnv *env, jobject instance, jstring code) {
     JSVM jsVM = (JSVM) instance;
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMCallContext jcc(env, jsVM);
+    JSVMPriv* priv = jcc.priv();
 
-    return JSVMPriv_invokeSafe<JSValue>(priv, [priv, env, jsVM, code](duk_context *ctx) {
+    return JSVMPriv_invokeSafe<JSValue>(jcc, [&jcc, code](duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
         String_pushJString(env, code, ctx);
         duk_eval(ctx);
-        return JSValue_createFromStack(env, jsVM, -1);
+        return JSValue_createFromStack(jcc, -1);
     });
 }
 
@@ -88,7 +114,7 @@ JNIEXPORT int JNICALL
 Java_me_ntrrgc_jsvm_JSVM_getStackFrameSizeNative(JNIEnv *env, jobject instance) {
 
     JSVM jsVM = (JSVM) instance;
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMPriv* priv = JSVM_peekPriv(env, jsVM);
     duk_context* ctx = priv->ctx;
 
     return (int) duk_get_top(ctx);
@@ -99,7 +125,7 @@ JNIEXPORT int JNICALL
 Java_me_ntrrgc_jsvm_JSVM_getStackSizeNative(JNIEnv *env, jobject instance) {
 
     JSVM jsVM = (JSVM) instance;
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMPriv* priv = JSVM_peekPriv(env, jsVM);
     duk_context* ctx = priv->ctx;
 
     duk_push_int(ctx, 1);
@@ -114,14 +140,14 @@ JNIEXPORT jobject JNICALL
 Java_me_ntrrgc_jsvm_JSVM_getGlobalScopeNative(JNIEnv *env, jobject instance) {
 
     JSVM jsVM = (JSVM) instance;
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMCallContext jcc(env, jsVM);
 
-    return JSVMPriv_invokeSafe<JSObject>(priv, [priv, env, jsVM] (duk_context *ctx) {
+    return JSVMPriv_invokeSafe<JSObject>(jcc, [&jcc](duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
 
         // Push global object
         duk_push_global_object(ctx);
 
-        JSObject ret = priv->objectBook.exposeObject(env, -1);
+        JSObject ret = priv->objectBook.exposeObject(jcc, -1);
 
         // Restore stack
         duk_pop(ctx); // object
@@ -135,14 +161,14 @@ JNIEXPORT jobject JNICALL
 Java_me_ntrrgc_jsvm_JSVM_newObjectNative(JNIEnv *env, jobject instance) {
 
     JSVM jsVM = (JSVM) instance;
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMCallContext jcc(env, jsVM);
 
-    return JSVMPriv_invokeSafe<JSObject>(priv, [priv, env, jsVM] (duk_context *ctx) {
+    return JSVMPriv_invokeSafe<JSObject>(jcc, [&jcc](duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
 
         // Push empty object
         duk_push_object(ctx);
 
-        JSObject ret = priv->objectBook.exposeObject(env, -1);
+        JSObject ret = priv->objectBook.exposeObject(jcc, -1);
 
         // Restore stack
         duk_pop(ctx); // object
@@ -156,10 +182,10 @@ JNIEXPORT jobject JNICALL
 Java_me_ntrrgc_jsvm_JSVM_newObjectNativeWithProto(JNIEnv *env, jobject instance, jobject proto_) {
 
     JSVM jsVM = (JSVM) instance;
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMCallContext jcc(env, jsVM);
     JSObject proto = (JSObject) proto_;
 
-    return JSVMPriv_invokeSafe<JSObject>(priv, [priv, env, jsVM, proto] (duk_context *ctx) {
+    return JSVMPriv_invokeSafe<JSObject>(jcc, [&jcc, proto](duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
 
         if (proto == NULL) {
             // Push bare object (inherits from null)
@@ -172,7 +198,7 @@ Java_me_ntrrgc_jsvm_JSVM_newObjectNativeWithProto(JNIEnv *env, jobject instance,
             duk_set_prototype(ctx, -2);
         }
 
-        JSObject ret = priv->objectBook.exposeObject(env, -1);
+        JSObject ret = priv->objectBook.exposeObject(jcc, -1);
 
         // Restore stack
         duk_pop(ctx); // object
@@ -187,9 +213,9 @@ JNIEXPORT jobject JNICALL
 Java_me_ntrrgc_jsvm_JSVM_newFunctionNative(JNIEnv *env, jobject instance, jint callableHandle) {
 
     JSVM jsVM = (JSVM) instance;
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMCallContext jcc(env, jsVM);
 
-    return JSVMPriv_invokeSafe<JSObject>(priv, [priv, env, jsVM, callableHandle] (duk_context *ctx) {
+    return JSVMPriv_invokeSafe<JSObject>(jcc, [&jcc, callableHandle](duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
 
         // Create the trampoline JS function
         duk_push_global_stash(ctx);
@@ -205,7 +231,7 @@ Java_me_ntrrgc_jsvm_JSVM_newFunctionNative(JNIEnv *env, jobject instance, jint c
         // Attach the finalizer to the function
         duk_set_finalizer(ctx, -2);
 
-        JSFunction retFunction = (JSFunction) priv->objectBook.exposeObject(env, -1);
+        JSFunction retFunction = (JSFunction) priv->objectBook.exposeObject(jcc, -1);
 
         // Restore stack
         duk_pop_2(ctx); // retFunction, global stash
@@ -223,13 +249,14 @@ Java_me_ntrrgc_jsvm_JSVM_newFunctionNative(JNIEnv *env, jobject instance, jint c
  * the stack.
  */
 static duk_ret_t JSVM_dukMakeNativeCall(duk_context *ctx) {
-    JSVMPriv* priv = thisThreadJSVMPriv;
-    JSVM jsVM = priv->jsVM;
-    JNIEnv* env = priv->env;
+    JSVMCallContext& jcc = JSVMCallContext::current();
+    JSVMPriv* priv = jcc.priv();
+    JSVM jsVM = jcc.jsVM();
+    JNIEnv* env = jcc.jniEnv();
 
     jint callableHandle = duk_require_int(ctx, 0);
 
-    JSValue thisArg = JSValue_createFromStack(env, jsVM, 1);
+    JSValue thisArg = JSValue_createFromStack(jcc, 1);
 
     duk_require_object_coercible(ctx, 2); // args
     unsigned int countArgs = (unsigned int) duk_get_length(ctx, 2);
@@ -237,7 +264,7 @@ static duk_ret_t JSVM_dukMakeNativeCall(duk_context *ctx) {
 
     for (unsigned int i = 0; i < countArgs; ++i) {
         duk_get_prop_index(ctx, 2, i);
-        JSValue jsValue = JSValue_createFromStack(env, jsVM, -1);
+        JSValue jsValue = JSValue_createFromStack(jcc, -1);
         env->SetObjectArrayElement(argsArray, i, jsValue);
         env->DeleteLocalRef(jsValue);
         duk_pop(ctx);
@@ -281,9 +308,9 @@ static duk_ret_t JSVM_dukMakeNativeCall(duk_context *ctx) {
  * Called as a Duktape function to finalize JSCallable.
  */
 static duk_ret_t JSVM_dukFinalizeNativeCallable(duk_context *ctx) {
-    JSVMPriv* priv = thisThreadJSVMPriv;
-    JSVM jsVM = priv->jsVM;
-    JNIEnv* env = priv->env;
+    JSVMCallContext& jcc = JSVMCallContext::current();
+    JSVM jsVM = jcc.jsVM();
+    JNIEnv* env = jcc.jniEnv();
 
     jint callableHandle = duk_require_int(ctx, 0);
 
@@ -292,8 +319,7 @@ static duk_ret_t JSVM_dukFinalizeNativeCallable(duk_context *ctx) {
     return 0; // return undefined
 }
 
-JSVMPriv::JSVMPriv(JNIEnv *initialJNIEnv, JSVM initialJSVM)
-        : env(initialJNIEnv), jsVM(initialJSVM)
+JSVMPriv::JSVMPriv()
 {
     ctx = duk_create_heap(
             NULL, NULL, NULL, NULL, NULL
@@ -346,7 +372,7 @@ JSVMPriv::JSVMPriv(JNIEnv *initialJNIEnv, JSVM initialJSVM)
 
     duk_pop(ctx); // pop the stash
 
-    this->objectBook.lateInit(ctx, this);
+    this->objectBook.lateInit(ctx);
 }
 
 JSVMPriv::~JSVMPriv() {

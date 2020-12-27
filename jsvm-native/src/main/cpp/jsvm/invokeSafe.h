@@ -24,22 +24,22 @@ namespace jsvm {
     duk_ret_t
     _duk_raw_function_call(duk_context *ctx, void *udata);
 
-    void JSVMPriv_invokeSafeVoid(JSVMPriv *priv, std::function<void(duk_context *)> callback);
+    void JSVMPriv_invokeSafeVoid(JSVMCallContext& jcc, std::function<void(duk_context *, JSVMPriv *, JNIEnv *)> callback);
 
     template<typename T>
     T
-    JSVMPriv_invokeSafe(JSVMPriv *priv, std::function<T(duk_context *)> callback) {
-        duk_context *ctx = priv->ctx;
+    JSVMPriv_invokeSafe(JSVMCallContext& jcc, std::function<T(duk_context *, JSVMPriv *, JNIEnv *)> callback) {
+        JSVMPriv* priv = jcc.priv();
 
         // T has to be an assignable, concrete type (usually a pointer to a Java object)
         T ret;
         // Exceptions may be anything, so we have to use pointers to ensure virtual dispatch.
         std::unique_ptr<JavaException> capturedJavaException;
 
-        duk_safe_call_std_function wrappedCallback = [&ret, &callback, &capturedJavaException](
+        duk_safe_call_std_function wrappedCallback = [&ret, &callback, &capturedJavaException, &jcc](
                 duk_context *receivedCtx) {
             try {
-                ret = callback(receivedCtx);
+                ret = callback(receivedCtx, jcc.priv(), jcc.jniEnv());
             } catch (JavaException &javaException) {
                 capturedJavaException = javaException.moveClone();
             }
@@ -52,7 +52,7 @@ namespace jsvm {
             if (capturedJavaException) {
                 // A wrapped Java exception has been throw in C++, but not propagated yet to Java!
                 // Propagate it now:
-                JNIEnv *env = priv->env;
+                JNIEnv *env = jcc.jniEnv();
                 jsvm_assert(env->ExceptionCheck() == JNI_FALSE);
                 capturedJavaException->propagateToJava(env);
 
@@ -61,10 +61,10 @@ namespace jsvm {
             } else if (dukExecRet == DUK_EXEC_ERROR) {
                 // A JavaScript error has been thrown, wrap into a JSError class
                 // and propagate it to Java.
-                JNIEnv *env = priv->env;
+                JNIEnv *env = jcc.jniEnv();
                 jsvm_assert(env->ExceptionCheck() == JNI_FALSE);
 
-                JSValue errorValue = JSValue_createFromStack(env, priv->jsVM, -1);
+                JSValue errorValue = JSValue_createFromStack(jcc, -1);
                 JSError(env, errorValue).propagateToJava(env);
 
                 duk_pop(priv->ctx); // returned error instance
@@ -77,7 +77,7 @@ namespace jsvm {
             }
         } catch (JavaException& error) {
             // An error occurred while trying to return, try to throw it.
-            JNIEnv *env = priv->env;
+            JNIEnv *env = jcc.jniEnv();
             if (!env->ExceptionCheck()) {
                 error.propagateToJava(env);
             }

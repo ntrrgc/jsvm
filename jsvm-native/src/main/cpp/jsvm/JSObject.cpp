@@ -18,7 +18,8 @@ using namespace jsvm;
 void
 jsvm::JSObject_push(JNIEnv* env, JSObject jsObject) {
     JSVM jsVM = (JSVM) env->GetObjectField(jsObject, JSObject_jsVM);
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMCallContext jcc(env, jsVM);
+    JSVMPriv* priv = jcc.priv();
 
     jint handle = env->GetIntField(jsObject, JSObject_handle);
     
@@ -39,9 +40,10 @@ Java_me_ntrrgc_jsvm_JSObject_toStringNative(JNIEnv *env, jobject instance, jobje
                                             jint handle) {
 
     JSVM jsVM = (JSVM) jsVM_;
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMCallContext jcc(env, jsVM);
+    JSVMPriv* priv = jcc.priv();
 
-    return JSVMPriv_invokeSafe<jstring>(priv, [priv, env, jsVM, handle] (duk_context *ctx) {
+    return JSVMPriv_invokeSafe<jstring>(jcc, [handle] (duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
 
         // Retrieve the object
         priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
@@ -62,9 +64,10 @@ Java_me_ntrrgc_jsvm_JSObject_getClassNameNative(JNIEnv *env, jobject instance, j
                                                 jint handle) {
 
     JSVM jsVM = (JSVM) jsVM_;
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMCallContext jcc(env, jsVM);
+    JSVMPriv* priv = jcc.priv();
 
-    return JSVMPriv_invokeSafe<jstring>(priv, [priv, env, jsVM, handle] (duk_context *ctx) {
+    return JSVMPriv_invokeSafe<jstring>(jcc, [handle] (duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
 
         jstring ret = NULL;
 
@@ -93,9 +96,10 @@ Java_me_ntrrgc_jsvm_JSObject_finalizeNative(JNIEnv *env, jobject instance, jobje
                                             jint handle) {
 
     JSVM jsVM = (JSVM) jsVM_;
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMCallContext jcc(env, jsVM);
+    JSVMPriv* priv = jcc.priv();
 
-    priv->objectBook.finalizeJSObjectWithHandle(env, (ObjectBook::handle_t) handle);
+    priv->objectBook.finalizeJSObjectWithHandle(jcc, (ObjectBook::handle_t) handle);
 
 }
 
@@ -104,9 +108,10 @@ JNIEXPORT jobject JNICALL
 Java_me_ntrrgc_jsvm_JSObject_getByKeyNative(JNIEnv *env, jobject instance, jobject jsVM_, jint handle,
                                             jstring key) {
     JSVM jsVM = (JSVM) jsVM_;
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMCallContext jcc(env, jsVM);
+    JSVMPriv* priv = jcc.priv();
 
-    return JSVMPriv_invokeSafe<JSValue>(priv, [priv, env, jsVM, key, handle] (duk_context *ctx) {
+    return JSVMPriv_invokeSafe<JSValue>(jcc, [&jcc, key, handle] (duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
 
         // Retrieve the object
         priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
@@ -116,7 +121,7 @@ Java_me_ntrrgc_jsvm_JSObject_getByKeyNative(JNIEnv *env, jobject instance, jobje
         duk_get_prop(ctx, -2);
 
         // Wrap in JSValue
-        JSValue ret = JSValue_createFromStack(env, jsVM, -1);
+        JSValue ret = JSValue_createFromStack(jcc, -1);
 
         // Restore stack
         duk_pop_2(ctx);
@@ -132,9 +137,10 @@ Java_me_ntrrgc_jsvm_JSObject_getByIndexNative(JNIEnv *env, jobject instance, job
                                               jint handle, jint index) {
 
     JSVM jsVM = (JSVM) jsVM_;
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMCallContext jcc(env, jsVM);
+    JSVMPriv* priv = jcc.priv();
 
-    return JSVMPriv_invokeSafe<JSValue>(priv, [priv, env, jsVM, index, handle] (duk_context *ctx) {
+    return JSVMPriv_invokeSafe<JSValue>(jcc, [&jcc, index, handle] (duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
 
         // Retrieve the object
         priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
@@ -143,7 +149,7 @@ Java_me_ntrrgc_jsvm_JSObject_getByIndexNative(JNIEnv *env, jobject instance, job
         duk_get_prop_index(ctx, -1, (duk_uarridx_t) index);
 
         // Wrap in JSValue
-        JSValue ret = JSValue_createFromStack(env, jsVM, -1);
+        JSValue ret = JSValue_createFromStack(jcc, -1);
 
         // Restore stack
         duk_pop_2(ctx);
@@ -157,9 +163,9 @@ JNIEXPORT void JNICALL
 Java_me_ntrrgc_jsvm_JSObject_setByKeyNative(JNIEnv *env, jobject instance, jobject jsVM_,
                                             jint handle, jstring key, jobject value) {
     JSVM jsVM = (JSVM) jsVM_;
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMCallContext jcc(env, jsVM);
 
-    return JSVMPriv_invokeSafeVoid(priv, [priv, env, jsVM, key, handle, value] (duk_context *ctx) {
+    return JSVMPriv_invokeSafeVoid(jcc, [handle, key, value](duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
 
         // Retrieve the object
         priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
@@ -180,9 +186,10 @@ Java_me_ntrrgc_jsvm_JSObject_setByIndexNative(JNIEnv *env, jobject instance, job
                                               jint handle, jint index, jobject value) {
 
     JSVM jsVM = (JSVM) jsVM_;
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMCallContext jcc(env, jsVM);
+    JSVMPriv* priv = jcc.priv();
 
-    return JSVMPriv_invokeSafeVoid(priv, [priv, env, jsVM, index, handle, value] (duk_context *ctx) {
+    return JSVMPriv_invokeSafeVoid(jcc, [index, handle, value] (duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
 
         // Retrieve the object
         priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
@@ -201,9 +208,10 @@ JNIEXPORT jboolean JNICALL
 Java_me_ntrrgc_jsvm_JSObject_containsByKeyNative(JNIEnv *env, jobject instance, jobject jsVM_,
                                                  jint handle, jstring key) {
     JSVM jsVM = (JSVM) jsVM_;
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMCallContext jcc(env, jsVM);
+    JSVMPriv* priv = jcc.priv();
 
-    return JSVMPriv_invokeSafe<jboolean>(priv, [priv, env, jsVM, key, handle] (duk_context *ctx) {
+    return JSVMPriv_invokeSafe<jboolean>(jcc, [key, handle] (duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
 
         // Retrieve the object
         priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
@@ -225,9 +233,10 @@ Java_me_ntrrgc_jsvm_JSObject_containsByIndexNative(JNIEnv *env, jobject instance
                                                    jint handle, jint index) {
 
     JSVM jsVM = (JSVM) jsVM_;
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMCallContext jcc(env, jsVM);
+    JSVMPriv* priv = jcc.priv();
 
-    return JSVMPriv_invokeSafe<jboolean>(priv, [priv, env, jsVM, index, handle] (duk_context *ctx) {
+    return JSVMPriv_invokeSafe<jboolean>(jcc, [index, handle] (duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
 
         // Retrieve the object
         priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);

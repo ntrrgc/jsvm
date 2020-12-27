@@ -23,58 +23,57 @@ namespace jsvm {
     class _JSVM : public _jobject {};
     typedef _JSVM* JSVM;
 
-    class JSVMPriv;
-    extern thread_local JSVMPriv* thisThreadJSVMPriv;
-
     /**
      * This class stores and manages JSVM internals.
      *
      * A pointer to this class is stored in JSVM::hPriv.
      */
     struct JSVMPriv {
-        JSVMPriv(JNIEnv *initialJNIEnv, JSVM initialJSVM);
+        JSVMPriv();
         ~JSVMPriv();
 
         // Handle to the JS heap and VM.
         duk_context *ctx;
-        // Used to invoke Java methods and throw Java exceptions.
-        JNIEnv *env;
 
-        // Pointer to the instance of JSVM in Java.
-        // It's only valid since load() is called
-        // until control returns to Java code.
-        JSVM jsVM;
-
-        // Cached field, so that a local reference is not
-        // created every time.
-        ArrayList jsObjectsByHandle;
-
+        // Keeps track of JS objects accessible from Java.
         ObjectBook objectBook;
-
-        /**
-         * This method should be called just after the
-         * transition from Java to C++, before anything
-         * is done with duk_context, as it will be read
-         * in the following situations:
-         *
-         * - if an unhandled exception is throw by JS code,
-         *   in order to propagate it to Java code.
-         * - in order to invoke exported Java methods.
-         *
-         * Note that JNIEnv pointers vary from thread
-         * to thread... But this is not a problem since
-         * JSVM instances are synchronized.
-         */
-        void load(JNIEnv *env, JSVM jsVM) {
-            thisThreadJSVMPriv = this;
-            this->env = env;
-            this->jsVM = jsVM;
-            this->jsObjectsByHandle = (ArrayList)
-                    env->GetObjectField(jsVM, JSVM_jsObjectsByHandle);
-        }
     };
 
-    JSVMPriv * JSVM_getPriv(JNIEnv *env, JSVM jsVM);
+    class JSVMCallContext {
+    public:
+        // A new JSVMCallContext must be created when a JNI call to use a JSVM
+        // is received. The context contains a pointer to JSVMPriv and several
+        // JNI local references.
+        JSVMCallContext(JNIEnv* jniEnv, JSVM jsVM);
+        ~JSVMCallContext();
+
+        // A C++ handler may be invoked as a consequence of running JavaScript
+        // code, for instance, to call a Java function or throw an exception.
+        // Such handler can retrieve the current context from the stack using
+        // this function.
+        static JSVMCallContext& current();
+
+        JSVMCallContext(const JSVMCallContext&) = delete;
+        JSVMCallContext& operator=(const JSVMCallContext&) = delete;
+
+        JSVMPriv* priv() const { return m_priv; }
+
+        // The following are JNI local references, therefore valid only during
+        // the lifetime of the JNI invocation.
+        JNIEnv* jniEnv() const { return m_jniEnv; }
+        JSVM jsVM() const { return m_jsVM; }
+        ArrayList jsObjectsByHandle();
+
+    private:
+        JNIEnv* m_jniEnv;
+        JSVM m_jsVM;
+        JSVMPriv* m_priv;
+        ArrayList m_jsObjectsByHandle = nullptr; // Lazy loaded.
+
+        static thread_local std::stack<JSVMCallContext*> s_thisThreadStack;
+    };
+
+    JSVMPriv * JSVM_peekPriv(JNIEnv *env, JSVM jsVM);
 
 }
 

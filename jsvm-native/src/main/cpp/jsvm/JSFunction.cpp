@@ -21,10 +21,10 @@ Java_me_ntrrgc_jsvm_JSFunction_callNative(JNIEnv *env, jobject instance, jobject
                                           jobject thisArg_, jobjectArray args) {
 
     JSVM jsVM = (JSVM) jsVM_;
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMCallContext jcc(env, jsVM);
     JSValue thisArg = (JSValue) thisArg_;
 
-    return JSVMPriv_invokeSafe<JSValue>(priv, [priv, env, jsVM, handle, thisArg, args] (duk_context *ctx) {
+    return JSVMPriv_invokeSafe<JSValue>(jcc, [&jcc, handle, thisArg, args](duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
 
         // Push the function
         priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
@@ -43,7 +43,7 @@ Java_me_ntrrgc_jsvm_JSFunction_callNative(JNIEnv *env, jobject instance, jobject
         duk_call_method(ctx, numArgs);
 
         // Retrieve the return value
-        JSValue ret = JSValue_createFromStack(env, jsVM, -1);
+        JSValue ret = JSValue_createFromStack(jcc, -1);
 
         // Restore stack
         duk_pop(ctx); // return value
@@ -59,9 +59,10 @@ Java_me_ntrrgc_jsvm_JSFunction_callNewNative(JNIEnv *env, jobject instance, jobj
                                              jobjectArray args) {
 
     JSVM jsVM = (JSVM) jsVM_;
-    JSVMPriv* priv = JSVM_getPriv(env, jsVM);
+    JSVMCallContext jcc(env, jsVM);
+    JSVMPriv* priv = jcc.priv();
 
-    return JSVMPriv_invokeSafe<JSValue>(priv, [priv, env, jsVM, handle, args] (duk_context *ctx) {
+    return JSVMPriv_invokeSafe<JSValue>(jcc, [&jcc, handle, args](duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
 
         // Push the function
         priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
@@ -77,7 +78,7 @@ Java_me_ntrrgc_jsvm_JSFunction_callNewNative(JNIEnv *env, jobject instance, jobj
         duk_new(ctx, numArgs);
 
         // Retrieve the return value
-        JSValue ret = JSValue_createFromStack(env, jsVM, -1);
+        JSValue ret = JSValue_createFromStack(jcc, -1);
 
         // Restore stack
         duk_pop(ctx); // return value

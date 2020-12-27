@@ -21,7 +21,7 @@ namespace jsvm {
 
     typedef _JSValue *JSValue;
 
-    JSValue JSValue_createFromStack(JNIEnv *env, JSVM jsVM, int stackPosition);
+    JSValue JSValue_createFromStack(JSVMCallContext& jcc, int stackPosition);
 
     void JSValue_push(JNIEnv *env, JSValue jsValue, duk_context *ctx);
 
