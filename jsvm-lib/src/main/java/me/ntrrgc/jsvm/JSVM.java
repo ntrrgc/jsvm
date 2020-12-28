@@ -193,7 +193,7 @@ public class JSVM {
     private native JSObject newObjectNativeWithProto(JSObject proto);
 
     @NotNull
-    public final JSFunction function(@NotNull JSCallable callable) {
+    public final JSFunction newFunction(@NotNull JSCallable callable) {
         synchronized (this.lock) {
             int callableHandle = callableAllocator.allocate(callable);
 

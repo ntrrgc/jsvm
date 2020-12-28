@@ -38,7 +38,7 @@ public class JSCallableTests {
 
     @Test
     public void createSimpleFunction() throws Exception {
-        JSFunction jsFunction = jsvm.function(new JSCallable() {
+        JSFunction jsFunction = jsvm.newFunction(new JSCallable() {
             @NotNull
             @Override
             public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
@@ -53,7 +53,7 @@ public class JSCallableTests {
     public void functionThatReceivesObject() throws Exception {
         JSObject obj = jsvm.newObject();
         obj.set("x", JSValue.aNumber(5));
-        JSFunction jsFunction = jsvm.function(new JSCallable() {
+        JSFunction jsFunction = jsvm.newFunction(new JSCallable() {
             @NotNull
             @Override
             public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
@@ -68,7 +68,7 @@ public class JSCallableTests {
     public void functionThatFails() throws Exception {
         JSObject obj = jsvm.newObject();
         obj.set("x", JSValue.aNumber(5));
-        JSFunction jsFunction = jsvm.function(new JSCallable() {
+        JSFunction jsFunction = jsvm.newFunction(new JSCallable() {
             @NotNull
             @Override
             public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
@@ -85,7 +85,7 @@ public class JSCallableTests {
 
     @Test
     public void functionThatReceivesObjectFromJSCode() throws Exception {
-        JSFunction jsFunction = jsvm.function(new JSCallable() {
+        JSFunction jsFunction = jsvm.newFunction(new JSCallable() {
             @NotNull
             @Override
             public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
@@ -98,7 +98,7 @@ public class JSCallableTests {
 
     @Test
     public void jsCallsJavaCallsJS() throws Exception {
-        JSFunction jsFunction = jsvm.function(new JSCallable() {
+        JSFunction jsFunction = jsvm.newFunction(new JSCallable() {
             @NotNull
             @Override
             public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
@@ -113,7 +113,7 @@ public class JSCallableTests {
 
     @Test
     public void jsCallsJavaCallsJS_ExceptionInsideJS() throws Exception {
-        JSFunction jsFunction = jsvm.function(new JSCallable() {
+        JSFunction jsFunction = jsvm.newFunction(new JSCallable() {
             @NotNull
             @Override
             public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
@@ -133,7 +133,7 @@ public class JSCallableTests {
 
     @Test
     public void jsCallsJavaCallsJSCallsJava() throws Exception {
-        jsvm.getGlobalScope().set("simpleJavaFunction", JSValue.anObject(jsvm.function(new JSCallable() {
+        jsvm.getGlobalScope().set("simpleJavaFunction", JSValue.anObject(jsvm.newFunction(new JSCallable() {
             @NotNull
             @Override
             public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
@@ -153,7 +153,7 @@ public class JSCallableTests {
                 "    return simpleJavaFunction(0) + ' ' + simpleJavaFunction(1);" +
                 "})"));
 
-        jsvm.getGlobalScope().set("complexJavaFunction", JSValue.anObject(jsvm.function(new JSCallable() {
+        jsvm.getGlobalScope().set("complexJavaFunction", JSValue.anObject(jsvm.newFunction(new JSCallable() {
             @NotNull
             @Override
             public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
@@ -167,7 +167,7 @@ public class JSCallableTests {
     @Test
     public void jsCallsJavaCallsDifferentJSVMThenJS() throws Exception {
         final JSVM otherJSVM = new JSVM();
-        otherJSVM.getGlobalScope().set("hello", JSValue.anObject(otherJSVM.function(new JSCallable() {
+        otherJSVM.getGlobalScope().set("hello", JSValue.anObject(otherJSVM.newFunction(new JSCallable() {
             @NotNull
             @Override
             public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
@@ -175,7 +175,7 @@ public class JSCallableTests {
             }
         })));
 
-        jsvm.getGlobalScope().set("world", JSValue.anObject(jsvm.function(new JSCallable() {
+        jsvm.getGlobalScope().set("world", JSValue.anObject(jsvm.newFunction(new JSCallable() {
             @NotNull
             @Override
             public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
@@ -183,7 +183,7 @@ public class JSCallableTests {
             }
         })));
 
-        jsvm.getGlobalScope().set("helloWorld", JSValue.anObject(jsvm.function(new JSCallable() {
+        jsvm.getGlobalScope().set("helloWorld", JSValue.anObject(jsvm.newFunction(new JSCallable() {
             @NotNull
             @Override
             public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
@@ -198,7 +198,7 @@ public class JSCallableTests {
 
     @Test
     public void jsCallsJavaWhichUsesDifferentJSVMThenCallsJavaAgain() throws Exception {
-        jsvm.getGlobalScope().set("hello", JSValue.anObject(jsvm.function(new JSCallable() {
+        jsvm.getGlobalScope().set("hello", JSValue.anObject(jsvm.newFunction(new JSCallable() {
             @NotNull
             @Override
             public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
@@ -207,7 +207,7 @@ public class JSCallableTests {
             }
         })));
 
-        jsvm.getGlobalScope().set("world", JSValue.anObject(jsvm.function(new JSCallable() {
+        jsvm.getGlobalScope().set("world", JSValue.anObject(jsvm.newFunction(new JSCallable() {
             @NotNull
             @Override
             public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {

@@ -88,7 +88,7 @@ public class JSFunctionTests {
     public void testNativeFunctionsAreGCed() throws Exception {
         Assert.assertEquals(0, TestUtils.getAliveCallableCount(jsvm));
 
-        JSFunction dummyFunction = jsvm.function(new JSCallable() {
+        JSFunction dummyFunction = jsvm.newFunction(new JSCallable() {
             @NotNull
             @Override
             public JSValue call(@NotNull JSValue[] args, @NotNull JSValue thisArg, @NotNull JSVM jsvm) {
