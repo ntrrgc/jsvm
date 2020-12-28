@@ -24,8 +24,6 @@ namespace jsvm {
     duk_ret_t
     _duk_raw_function_call(duk_context *ctx, void *udata);
 
-    void JSVMPriv_invokeSafeVoid(JSVMCallContext& jcc, std::function<void(duk_context *, JSVMPriv *, JNIEnv *)> callback);
-
     template<typename T>
     T
     JSVMPriv_invokeSafe(JSVMCallContext& jcc, std::function<T(duk_context *, JSVMPriv *, JNIEnv *)> callback) {
@@ -83,6 +81,16 @@ namespace jsvm {
             }
             return static_cast<T>(0);
         }
+    }
+
+    template<>
+    void inline
+    JSVMPriv_invokeSafe(JSVMCallContext& jcc, std::function<void(duk_context *, JSVMPriv *, JNIEnv *)> callback) {
+        auto wrappedCallback = [&callback](duk_context * ctx, JSVMPriv * priv, JNIEnv * env) -> void* {
+            callback(ctx, priv, env);
+            return NULL;
+        };
+        JSVMPriv_invokeSafe<void*>(jcc, wrappedCallback);
     }
 
 }

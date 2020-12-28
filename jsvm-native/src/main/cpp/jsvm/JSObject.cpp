@@ -165,7 +165,7 @@ Java_me_ntrrgc_jsvm_JSObject_setByKeyNative(JNIEnv *env, jobject instance, jobje
     JSVM jsVM = (JSVM) jsVM_;
     JSVMCallContext jcc(env, jsVM);
 
-    return JSVMPriv_invokeSafeVoid(jcc, [handle, key, value](duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
+    return JSVMPriv_invokeSafe<void>(jcc, [handle, key, value](duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
 
         // Retrieve the object
         priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
@@ -189,7 +189,7 @@ Java_me_ntrrgc_jsvm_JSObject_setByIndexNative(JNIEnv *env, jobject instance, job
     JSVMCallContext jcc(env, jsVM);
     JSVMPriv* priv = jcc.priv();
 
-    return JSVMPriv_invokeSafeVoid(jcc, [index, handle, value] (duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
+    return JSVMPriv_invokeSafe<void>(jcc, [index, handle, value] (duk_context *ctx, JSVMPriv *priv, JNIEnv* env) {
 
         // Retrieve the object
         priv->objectBook.pushObjectWithHandle((ObjectBook::handle_t) handle);
