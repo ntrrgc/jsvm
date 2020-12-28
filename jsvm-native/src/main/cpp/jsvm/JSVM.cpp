@@ -55,6 +55,16 @@ ArrayList JSVMCallContext::jsObjectsByHandle() {
     return m_jsObjectsByHandle;
 }
 
+// Duktape will call this function if a fatal error within the VM is encountered.
+// For this to work Duktape must have been configured with -DDUK_USE_FATAL_HANDLER=JSVMDuktapeFatalErrorHandler
+// If Duktape is configured without said macro, it will use abort() instead.
+// The version of Duktape embedded in JSVM has this macro already set.
+void JSVMDuktapeFatalErrorHandler(void *, const char * msg)
+{
+    JSVMCallContext& jcc = JSVMCallContext::current();
+    jcc.jniEnv()->ThrowNew(JSVMInternalError_Class, msg);
+}
+
 extern "C" {
 
 extern int weakRefCount;

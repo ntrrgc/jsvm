@@ -14,7 +14,6 @@
 
 #include <stdafx.h>
 #include <stack>
-#include <setjmp.h>
 #include <jsvm/ObjectBook.h>
 #include <jsvm/exceptions.h>
 
