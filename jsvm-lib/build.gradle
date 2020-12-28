@@ -12,6 +12,4 @@ dependencies {
     implementation 'org.jetbrains:annotations-java5:15.0'
 }
 
-apply plugin: 'maven'
-
 group = 'com.github.ntrrgc'

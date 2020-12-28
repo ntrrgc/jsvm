@@ -35,7 +35,7 @@ android {
     ndkVersion '22.0.7026061'
 
     libraryVariants.all {
-        it.generateBuildConfig.enabled = false
+        it.generateBuildConfigProvider.configure { enabled = false }
     }
 }
 
